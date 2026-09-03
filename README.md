@@ -12,7 +12,7 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
 ## Stack
 
 - Vite + React + TypeScript + Tailwind v4
-- `@ppt/luminis` from the private npm feed (see `.npmrc`)
+- `@ppt/luminis` vendored in `vendor/luminis` (no private npm feed required for deploy)
 - Vercel serverless API routes (`/api/*`)
 - Neon Postgres
 
@@ -25,7 +25,11 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
    npm install
    ```
 
-   For `@ppt/luminis`, set `NPM_TOKEN` in your environment (see `.npmrc` and `.env.example`).
+   `@ppt/luminis` is bundled under `vendor/luminis`. To refresh from a local design-system checkout:
+
+   ```bash
+   npm run sync:luminis
+   ```
 
 2. **Environment** — copy `.env.example` to `.env.local`:
 
@@ -57,7 +61,7 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
 1. Push this repo to **private GitHub**
 2. Import project in Vercel
 3. Add Neon via Vercel Marketplace (sets `DATABASE_URL`)
-4. Set env vars: `JWT_SECRET`, `SETUP_SECRET`, `ADMIN_NAME`, `ADMIN_PASSWORD`, `NPM_TOKEN`
+4. Set env vars: `JWT_SECRET`, `SETUP_SECRET`, `ADMIN_NAME`, `ADMIN_PASSWORD`
 5. Deploy, then hit `/api/setup` once with the setup secret
 6. Log in as HR admin and use the app
 

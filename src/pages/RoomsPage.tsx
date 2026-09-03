@@ -153,7 +153,7 @@ export function RoomsPage() {
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label>Room</Label>
-                            <Select value={room} onValueChange={(v) => setRoom(v as RoomId)}>
+                            <Select value={room} onValueChange={(v: string) => setRoom(v as RoomId)}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>

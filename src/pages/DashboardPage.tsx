@@ -565,7 +565,7 @@ export function DashboardPage() {
                             <Label>Room</Label>
                             <Select
                                 value={bookRoom}
-                                onValueChange={(v) => setBookRoom(v as RoomId)}
+                                onValueChange={(v: string) => setBookRoom(v as RoomId)}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
