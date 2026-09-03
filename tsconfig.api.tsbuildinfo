@@ -1,0 +1,1 @@
+{"root":["./api/setup.ts","./api/_lib/auth.ts","./api/_lib/db.ts","./api/_lib/ubereatsmenu.ts","./api/auth/login.ts","./api/auth/me.ts","./api/auth/register.ts","./api/bookings/index.ts","./api/inventory/index.ts","./api/lunch/index.ts","./api/restaurants/index.ts","./api/suggestions/index.ts","./api/uber-eats/menu.ts"],"version":"5.9.3"}

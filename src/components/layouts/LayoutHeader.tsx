@@ -1,0 +1,42 @@
+import { LayoutHeaderBreadCrumb } from "@/components/layouts/LayoutHeaderBreadCrumb"
+import { ThemeToggle } from "@/components/layouts/ThemeToggle"
+import { Badge, Button } from "@ppt/luminis"
+import { useAuth } from "@/providers/AuthProvider"
+
+function LayoutHeader() {
+    const { user, setAdminMode } = useAuth()
+
+    return (
+        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+            <LayoutHeaderBreadCrumb />
+            <div className="flex items-center gap-3">
+                <div className="flex items-center rounded-md border p-0.5">
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant={user.isAdmin ? "ghost" : "secondary"}
+                        className="h-7 px-2.5 text-xs"
+                        onClick={() => setAdminMode(false)}
+                    >
+                        Team
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant={user.isAdmin ? "secondary" : "ghost"}
+                        className="h-7 px-2.5 text-xs"
+                        onClick={() => setAdminMode(true)}
+                    >
+                        HR Admin
+                    </Button>
+                </div>
+                <Badge variant={user.isAdmin ? "secondary" : "outline"}>
+                    {user.isAdmin ? "HR Admin" : "Team member"}
+                </Badge>
+                <ThemeToggle />
+            </div>
+        </header>
+    )
+}
+
+export default LayoutHeader
