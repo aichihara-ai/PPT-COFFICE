@@ -12,7 +12,7 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
 ## Stack
 
 - Vite + React + TypeScript + Tailwind v4
-- `@ppt/luminis` from the design-system npm feed
+- `@ppt/luminis` from the private npm feed (see `.npmrc`)
 - Vercel serverless API routes (`/api/*`)
 - Neon Postgres
 
@@ -21,16 +21,11 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
 1. **Install dependencies**
 
    ```bash
-   cd office-hub
+   cd PPTVCOFFICE
    npm install
    ```
 
-   For `@ppt/luminis`, set `NPM_TOKEN` in your environment (see `.npmrc`).  
-   For local dev without the feed, point at the monorepo package:
-
-   ```json
-   "@ppt/luminis": "file:../design-system/packages/luminis"
-   ```
+   For `@ppt/luminis`, set `NPM_TOKEN` in your environment (see `.npmrc` and `.env.example`).
 
 2. **Environment** — copy `.env.example` to `.env.local`:
 
