@@ -6,6 +6,7 @@ import { Pool } from "@neondatabase/serverless"
 import bcrypt from "bcryptjs"
 
 import { methodNotAllowed, sendJson } from "./_lib/auth.js"
+import { getDatabaseUrl } from "./_lib/databaseUrl.js"
 
 function splitSql(content: string) {
     return content
@@ -24,9 +25,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return sendJson(res, 403, { error: "Invalid setup secret" })
     }
 
-    const databaseUrl = process.env.DATABASE_URL
+    const databaseUrl = getDatabaseUrl()
     if (!databaseUrl) {
-        return sendJson(res, 500, { error: "DATABASE_URL is not set" })
+        return sendJson(res, 500, {
+            error: "DATABASE_URL is not set on this deployment. Add Neon connection string as DATABASE_URL on the ppt-coffice project (Production), then redeploy.",
+        })
     }
 
     const pool = new Pool({ connectionString: databaseUrl })
