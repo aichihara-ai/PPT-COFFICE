@@ -17,36 +17,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return sendJson(res, 400, { error: "Name and password required" })
     }
 
-    const sql = getSql()
-    const rows = await sql`
-        SELECT id, name, password_hash, is_admin
-        FROM users
-        WHERE name = ${name}
-        LIMIT 1
-    `
+    try {
+        const sql = getSql()
+        const rows = await sql`
+            SELECT id, name, password_hash, is_admin
+            FROM users
+            WHERE name = ${name}
+            LIMIT 1
+        `
 
-    const user = rows[0]
-    if (!user) {
-        return sendJson(res, 401, { error: "Invalid credentials" })
-    }
+        const user = rows[0]
+        if (!user) {
+            return sendJson(res, 401, { error: "Invalid credentials" })
+        }
 
-    const valid = await bcrypt.compare(password, user.password_hash)
-    if (!valid) {
-        return sendJson(res, 401, { error: "Invalid credentials" })
-    }
+        const valid = await bcrypt.compare(password, user.password_hash)
+        if (!valid) {
+            return sendJson(res, 401, { error: "Invalid credentials" })
+        }
 
-    const token = await signToken({
-        id: user.id,
-        name: user.name,
-        isAdmin: user.is_admin,
-    })
-
-    return sendJson(res, 200, {
-        token,
-        user: {
+        const token = await signToken({
             id: user.id,
             name: user.name,
             isAdmin: user.is_admin,
-        },
-    })
+        })
+
+        return sendJson(res, 200, {
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                isAdmin: user.is_admin,
+            },
+        })
+    } catch (error) {
+        console.error(error)
+        return sendJson(res, 500, {
+            error: error instanceof Error ? error.message : "Login failed",
+        })
+    }
 }

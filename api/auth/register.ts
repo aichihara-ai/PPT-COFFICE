@@ -19,31 +19,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
     }
 
-    const sql = getSql()
-    const existing = await sql`SELECT id FROM users WHERE name = ${name}`
-    if (existing.length > 0) {
-        return sendJson(res, 409, { error: "Name already taken" })
-    }
+    try {
+        const sql = getSql()
+        const existing = await sql`SELECT id FROM users WHERE name = ${name}`
+        if (existing.length > 0) {
+            return sendJson(res, 409, { error: "Name already taken" })
+        }
 
-    const passwordHash = await bcrypt.hash(password, 10)
-    const rows = await sql`
-        INSERT INTO users (name, password_hash, is_admin)
-        VALUES (${name}, ${passwordHash}, FALSE)
-        RETURNING id, name, is_admin
-    `
-    const user = rows[0]
-    const token = await signToken({
-        id: user.id,
-        name: user.name,
-        isAdmin: user.is_admin,
-    })
-
-    return sendJson(res, 201, {
-        token,
-        user: {
+        const passwordHash = await bcrypt.hash(password, 10)
+        const rows = await sql`
+            INSERT INTO users (name, password_hash, is_admin)
+            VALUES (${name}, ${passwordHash}, FALSE)
+            RETURNING id, name, is_admin
+        `
+        const user = rows[0]
+        const token = await signToken({
             id: user.id,
             name: user.name,
             isAdmin: user.is_admin,
-        },
-    })
+        })
+
+        return sendJson(res, 201, {
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                isAdmin: user.is_admin,
+            },
+        })
+    } catch (error) {
+        console.error(error)
+        return sendJson(res, 500, {
+            error: error instanceof Error ? error.message : "Registration failed",
+        })
+    }
 }
