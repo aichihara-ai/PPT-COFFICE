@@ -1,3 +1,4 @@
+import { clearAuthToken, getAuthToken } from "@/lib/authStorage"
 import { demoApiFetch } from "@/lib/demoStore"
 
 export class ApiError extends Error {
@@ -9,9 +10,11 @@ export class ApiError extends Error {
     }
 }
 
-const useLocalDemo =
-    import.meta.env.VITE_USE_LOCAL_DEMO !== "false" &&
-    import.meta.env.VITE_USE_API !== "true"
+export const isApiMode =
+    import.meta.env.VITE_USE_LOCAL_DEMO === "false" ||
+    import.meta.env.VITE_USE_API === "true"
+
+const useLocalDemo = !isApiMode
 
 export async function apiFetch<T>(
     path: string,
@@ -30,10 +33,18 @@ export async function apiFetch<T>(
         headers.set("Content-Type", "application/json")
     }
 
+    const token = getAuthToken()
+    if (token && !headers.has("Authorization")) {
+        headers.set("Authorization", `Bearer ${token}`)
+    }
+
     const response = await fetch(path, { ...options, headers })
     const data = (await response.json().catch(() => ({}))) as { error?: string } & T
 
     if (!response.ok) {
+        if (response.status === 401 && token) {
+            clearAuthToken()
+        }
         throw new ApiError(response.status, data.error ?? "Request failed")
     }
 

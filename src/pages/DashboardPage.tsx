@@ -21,7 +21,7 @@ import { apiFetch } from "@/lib/api"
 import { normalizeKitchenUrl } from "@/lib/kitchenLinks"
 import { BOOKING_TIME_SLOTS } from "@/lib/roomSchedule"
 import { useCountdown } from "@/hooks/useCountdown"
-import { useAuth } from "@/providers/AuthProvider"
+import { useRequiredUser } from "@/providers/AuthProvider"
 import {
     ROOM_CONFIG,
     type InventoryStatus,
@@ -64,7 +64,7 @@ const STATUS_BADGE: Record<InventoryStatus, "secondary" | "destructive"> = {
 }
 
 export function DashboardPage() {
-    const { user } = useAuth()
+    const user = useRequiredUser()
     const queryClient = useQueryClient()
     const today = new Date().toISOString().slice(0, 10)
 

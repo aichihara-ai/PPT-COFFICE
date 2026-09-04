@@ -8,7 +8,7 @@ import {
 import { PageShell } from "@/components/layouts/PageShell"
 import { INVENTORY_ITEM_CONFIG } from "@/consts/inventory"
 import { apiFetch } from "@/lib/api"
-import { useAuth } from "@/providers/AuthProvider"
+import { useRequiredUser } from "@/providers/AuthProvider"
 import type { InventoryStatus } from "@/types"
 import {
     Badge,
@@ -31,7 +31,7 @@ const STATUS_BADGE: Record<InventoryStatus, "secondary" | "destructive"> = {
 }
 
 export function InventoryPage() {
-    const { user } = useAuth()
+    const user = useRequiredUser()
     const queryClient = useQueryClient()
 
     const { data, isLoading } = useQuery({

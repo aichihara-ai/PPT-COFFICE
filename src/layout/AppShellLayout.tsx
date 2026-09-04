@@ -23,8 +23,8 @@ export function AppShellLayout() {
                 <AppSidebar
                     data={{
                         user: {
-                            name: user.name,
-                            email: user.isAdmin ? "HR Admin" : "Team member",
+                            name: user?.name ?? "Guest",
+                            email: user?.isAdmin ? "HR Admin" : "Team member",
                             avatar: "",
                         },
                         teams: sidebarData.teams,

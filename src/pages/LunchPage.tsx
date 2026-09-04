@@ -4,7 +4,7 @@ import { toast } from "sonner"
 import { LunchVotePanel, type LunchPanelData } from "@/components/lunch/LunchVotePanel"
 import { PageShell } from "@/components/layouts/PageShell"
 import { apiFetch } from "@/lib/api"
-import { useAuth } from "@/providers/AuthProvider"
+import { useRequiredUser } from "@/providers/AuthProvider"
 import { Card, CardContent } from "@ppt/luminis"
 
 type Restaurant = {
@@ -16,7 +16,7 @@ type Restaurant = {
 }
 
 export function LunchPage() {
-    const { user } = useAuth()
+    const user = useRequiredUser()
     const queryClient = useQueryClient()
 
     const { data: lunchData, isLoading: lunchLoading } = useQuery({

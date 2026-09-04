@@ -7,7 +7,7 @@ import { KitchenWishlistForm } from "@/components/kitchen/KitchenWishlistForm"
 import { PageShell } from "@/components/layouts/PageShell"
 import { apiFetch } from "@/lib/api"
 import { normalizeKitchenUrl } from "@/lib/kitchenLinks"
-import { useAuth } from "@/providers/AuthProvider"
+import { useRequiredUser } from "@/providers/AuthProvider"
 import type { SuggestionStatus } from "@/types"
 import {
     Card,
@@ -26,7 +26,7 @@ type Suggestion = {
 }
 
 export function KitchenPage() {
-    const { user } = useAuth()
+    const user = useRequiredUser()
     const queryClient = useQueryClient()
     const [link, setLink] = useState("")
 
