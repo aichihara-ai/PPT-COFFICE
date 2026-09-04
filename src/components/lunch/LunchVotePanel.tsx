@@ -128,8 +128,8 @@ export function LunchVotePanel({
           ? "Step 1 · Nominate"
           : "Step 2 · Vote"
 
-    const totalVotes = lunchData?.votes.length ?? 0
-    const totalUsers = lunchData?.users.length ?? 0
+    const totalVotes = lunchData?.votes?.length ?? 0
+    const totalUsers = lunchData?.users?.length ?? 0
     const visibleRestaurants = compact ? restaurants.slice(0, 8) : restaurants
 
     const toggleMenu = (restaurantId: number) => {
@@ -177,7 +177,7 @@ export function LunchVotePanel({
                     <div className="grid gap-2 sm:grid-cols-2">
                         {visibleRestaurants.map((restaurant) => {
                             const count =
-                                lunchData?.nominationCounts.find(
+                                lunchData?.nominationCounts?.find(
                                     (entry) => entry.restaurant_id === restaurant.id
                                 )?.count ?? 0
                             const isMine =
@@ -252,7 +252,7 @@ export function LunchVotePanel({
                         size="sm"
                         onClick={onLock}
                         disabled={
-                            lockPending || (lunchData?.nominationCounts.length ?? 0) === 0
+                            lockPending || (lunchData?.nominationCounts?.length ?? 0) === 0
                         }
                     >
                         Lock top 3 → start voting
@@ -266,7 +266,7 @@ export function LunchVotePanel({
                     <div className="grid gap-3 lg:grid-cols-3">
                         {(lunchData?.candidates ?? []).map((candidate) => {
                             const votes =
-                                lunchData?.voteCounts.find(
+                                lunchData?.voteCounts?.find(
                                     (entry) => entry.restaurant_id === candidate.restaurant_id
                                 )?.count ?? 0
                             const isMine =

@@ -40,7 +40,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 ORDER BY r.closed_at DESC NULLS LAST
                 LIMIT 1
             `
-            return sendJson(res, 200, { round: null, lastClosed: lastClosed[0] ?? null })
+            return sendJson(res, 200, {
+                round: null,
+                lastClosed: lastClosed[0] ?? null,
+                nominations: [],
+                nominationCounts: [],
+                candidates: [],
+                votes: [],
+                voteCounts: [],
+                users: [],
+                myNomination: null,
+                myVote: null,
+            })
         }
 
         const nominations = await sql`
