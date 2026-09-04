@@ -8,11 +8,19 @@ import bcrypt from "bcryptjs"
 import { methodNotAllowed, sendJson } from "./_lib/auth.js"
 import { getDatabaseUrl } from "./_lib/databaseUrl.js"
 
+function stripLineComments(sql: string) {
+    return sql
+        .split("\n")
+        .filter((line) => !line.trim().startsWith("--"))
+        .join("\n")
+        .trim()
+}
+
 function splitSql(content: string) {
     return content
         .split(";")
-        .map((statement) => statement.trim())
-        .filter((statement) => statement.length > 0 && !statement.startsWith("--"))
+        .map((statement) => stripLineComments(statement))
+        .filter((statement) => statement.length > 0)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
