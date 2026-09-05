@@ -6,6 +6,10 @@ import { RestaurantMenuPreview } from "@/widgets/lunch-vote/ui/RestaurantMenuPre
 import { useCountdown } from "@/shared/lib/use-countdown"
 import type { MenuPreview } from "@/shared/lib/uber-eats-menu"
 import {
+    restaurantDisplayTitle,
+    type AddRestaurantLinkInput,
+} from "@/entities/restaurant"
+import {
     MAX_LUNCH_VOTES,
     remainingLunchVotes,
     type LunchPanelData,
@@ -32,7 +36,7 @@ type LunchVotePanelProps = {
     onStart: () => void
     onVote: (restaurantId: number) => void
     onClose: () => void
-    onAddRestaurant: (uberEatsUrl: string) => void
+    onAddRestaurant: (input: AddRestaurantLinkInput) => void
     startPending?: boolean
     votePending?: boolean
     closePending?: boolean
@@ -79,6 +83,7 @@ export function LunchVotePanel({
     addRestaurantPending = false,
 }: LunchVotePanelProps) {
     const [uberEatsLink, setUberEatsLink] = useState("")
+    const [uberEatsTitle, setUberEatsTitle] = useState("")
     const [expandedMenuId, setExpandedMenuId] = useState<number | null>(null)
 
     const round = lunchData?.round
@@ -125,6 +130,11 @@ export function LunchVotePanel({
                             ? `Start a round — everyone picks up to ${MAX_LUNCH_VOTES} spots. One winner.`
                             : "Waiting for HR to start the next lunch round."}
                     </p>
+                    {restaurants.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            Pool is empty — add an Uber Eats link below.
+                        </p>
+                    ) : null}
                     {user.isAdmin ? (
                         <Button
                             onClick={onStart}
@@ -146,7 +156,12 @@ export function LunchVotePanel({
                             Limit reached — unvote a pick to choose another.
                         </p>
                     ) : null}
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    {visibleRestaurants.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            No restaurants in the pool yet. Add an Uber Eats link below.
+                        </p>
+                    ) : (
+                        <div className="grid gap-2 sm:grid-cols-2">
                         {visibleRestaurants.map((restaurant) => {
                             const votes =
                                 lunchData?.voteCounts?.find(
@@ -166,7 +181,10 @@ export function LunchVotePanel({
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                         <div className="min-w-0 space-y-1">
                                             <p className="font-medium leading-tight">
-                                                {restaurant.name}
+                                                {restaurantDisplayTitle(
+                                                    restaurant.name,
+                                                    restaurant.uber_eats_url
+                                                )}
                                                 {votes > 0 ? (
                                                     <span className="text-muted-foreground">
                                                         {" "}
@@ -222,7 +240,8 @@ export function LunchVotePanel({
                                 </div>
                             )
                         })}
-                    </div>
+                        </div>
+                    )}
                     {user.isAdmin ? (
                         <Button
                             size="sm"
@@ -240,12 +259,19 @@ export function LunchVotePanel({
                 <AddRestaurantLinkForm
                     value={uberEatsLink}
                     onChange={setUberEatsLink}
+                    title={uberEatsTitle}
+                    onTitleChange={setUberEatsTitle}
                     onSubmit={() => {
-                        onAddRestaurant(uberEatsLink.trim())
+                        onAddRestaurant({
+                            uberEatsUrl: uberEatsLink.trim(),
+                            title: uberEatsTitle,
+                        })
                         setUberEatsLink("")
+                        setUberEatsTitle("")
                     }}
                     isPending={addRestaurantPending}
                     inputId={compact ? "dash-lunch-uber-eats" : "lunch-uber-eats"}
+                    compact={compact}
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
                     {restaurants.length} spot{restaurants.length === 1 ? "" : "s"} in pool

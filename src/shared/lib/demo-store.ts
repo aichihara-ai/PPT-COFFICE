@@ -1,4 +1,5 @@
 import { normalizeKitchenUrl } from "@/shared/lib/kitchen-links"
+import { resolveRestaurantName, withoutUnlinkedPoolRestaurants } from "@/shared/lib/restaurant-title"
 import { MAX_LUNCH_VOTES, pickLunchWinner } from "@/shared/lib/lunch-vote"
 import {
     extractUberEatsMenuDemo,
@@ -72,12 +73,6 @@ type DemoState = {
     lastClosedWinner: string | null
 }
 
-const SEED_RESTAURANTS = [
-    "Japadog", "Mezze", "Nuba", "Earls", "Cactus Club", "Honest Greens",
-    "Tractor Foods", "Chipotle", "Poké Man", "Banana Leaf", "Peaceful Restaurant",
-    "Jamjar", "Nando's", "Freshii", "Burgers + Fries",
-]
-
 function defaultState(): DemoState {
     return {
         nextId: 100,
@@ -88,14 +83,7 @@ function defaultState(): DemoState {
             coffee: { status: "ok", updated_at: new Date().toISOString(), updated_by_name: "Team" },
             milk: { status: "ok", updated_at: new Date().toISOString(), updated_by_name: "Team" },
         },
-        restaurants: SEED_RESTAURANTS.map((name, i) => ({
-            id: i + 1,
-            name,
-            notes: null,
-            active: true,
-            uber_eats_url: null,
-            menu_preview: null,
-        })),
+        restaurants: [],
         lunchRound: null,
         nominations: [],
         candidates: [],
@@ -122,7 +110,16 @@ function load(): DemoState {
                 }
             }
         }
-        return { ...defaultState(), ...parsed }
+        const merged = { ...defaultState(), ...parsed }
+        const linkedRestaurants = withoutUnlinkedPoolRestaurants(merged.restaurants ?? [])
+        const strippedSeeds =
+            Array.isArray(parsed.restaurants) &&
+            parsed.restaurants.length !== linkedRestaurants.length
+        merged.restaurants = linkedRestaurants
+        if (strippedSeeds) {
+            save(merged)
+        }
+        return merged
     } catch {
         return defaultState()
     }
@@ -298,17 +295,22 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
                 throw new Error("Valid Uber Eats link required (ubereats.com store URL)")
             }
 
+            const menuPreview = extractUberEatsMenuDemo(uberEatsUrl)
+            const name = resolveRestaurantName({
+                title: body.title ?? body.name,
+                scrapedName: menuPreview.storeName,
+                uberEatsUrl,
+            })
             const duplicate = state.restaurants.find(
-                (r) => r.uber_eats_url === uberEatsUrl || r.name === body.name
+                (r) => r.uber_eats_url === uberEatsUrl || r.name === name
             )
             if (duplicate) {
                 throw new Error("Restaurant or Uber Eats link already in pool")
             }
 
-            const menuPreview = extractUberEatsMenuDemo(uberEatsUrl)
             const restaurant: Restaurant = {
                 id: nextId(state),
-                name: menuPreview.storeName,
+                name,
                 notes: null,
                 active: true,
                 uber_eats_url: uberEatsUrl,
