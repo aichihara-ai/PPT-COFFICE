@@ -1,4 +1,5 @@
 import { normalizeKitchenUrl } from "@/shared/lib/kitchen-links"
+import { MAX_LUNCH_VOTES, pickLunchWinner } from "@/shared/lib/lunch-vote"
 import {
     extractUberEatsMenuDemo,
     type MenuPreview,
@@ -27,6 +28,7 @@ type Booking = {
 type Suggestion = {
     id: number
     text: string
+    title?: string | null
     status: SuggestionStatus
     created_at: string
     user_name: string
@@ -61,7 +63,12 @@ type DemoState = {
     lunchRound: LunchRound | null
     nominations: { round_id: number; user_id: number; restaurant_id: number; created_at: string }[]
     candidates: { round_id: number; restaurant_id: number; nomination_count: number }[]
-    votes: { round_id: number; user_id: number; restaurant_id: number }[]
+    votes: {
+        round_id: number
+        user_id: number
+        restaurant_id: number
+        created_at: string
+    }[]
     lastClosedWinner: string | null
 }
 
@@ -230,6 +237,10 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
             const suggestion: Suggestion = {
                 id: nextId(state),
                 text: url,
+                title:
+                    typeof body.title === "string" && body.title.trim()
+                        ? body.title.trim().slice(0, 80)
+                        : null,
                 status: "open",
                 created_at: new Date().toISOString(),
                 user_name: state.user.name,
@@ -325,6 +336,7 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
                     users: [{ id: state.user.id, name: state.user.name }],
                     myNomination: null,
                     myVote: null,
+                    myVotes: [],
                 } as T
             }
 
@@ -350,11 +362,22 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
                 }))
 
             const roundVotes = state.votes.filter((v) => v.round_id === round.id)
-            const voteCounts = candidates.map((c) => ({
-                restaurant_id: c.restaurant_id,
-                restaurant_name: c.restaurant_name,
-                count: roundVotes.filter((v) => v.restaurant_id === c.restaurant_id).length,
-            }))
+            const voteTally = new Map<number, number>()
+            for (const vote of roundVotes) {
+                voteTally.set(
+                    vote.restaurant_id,
+                    (voteTally.get(vote.restaurant_id) ?? 0) + 1
+                )
+            }
+            const voteCounts = [...voteTally.entries()].map(
+                ([restaurant_id, count]) => ({
+                    restaurant_id,
+                    restaurant_name:
+                        state.restaurants.find((r) => r.id === restaurant_id)?.name ??
+                        "",
+                    count,
+                })
+            )
 
             return {
                 round,
@@ -365,6 +388,7 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
                 votes: roundVotes.map((v) => ({
                     user_id: v.user_id,
                     restaurant_id: v.restaurant_id,
+                    created_at: v.created_at,
                     restaurant_name:
                         state.restaurants.find((r) => r.id === v.restaurant_id)?.name ?? "",
                 })),
@@ -372,6 +396,9 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
                 users: [{ id: state.user.id, name: state.user.name }],
                 myNomination: noms.find((n) => n.user_id === state.user.id) ?? null,
                 myVote: roundVotes.find((v) => v.user_id === state.user.id) ?? null,
+                myVotes: roundVotes
+                    .filter((v) => v.user_id === state.user.id)
+                    .map((v) => ({ restaurant_id: v.restaurant_id })),
             } as T
         }
 
@@ -382,12 +409,12 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
                 }
                 state.lunchRound = {
                     id: nextId(state),
-                    status: "nominating",
+                    status: "voting",
                     created_by: state.user.id,
                     created_by_name: state.user.name,
                     winner_restaurant_id: null,
                     closed_at: null,
-                    voting_ends_at: null,
+                    voting_ends_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
                 }
                 state.nominations = []
                 state.candidates = []
@@ -433,26 +460,54 @@ export function demoApiFetch<T>(path: string, options: RequestInit = {}): T {
             }
 
             if (body.action === "vote") {
-                state.votes = state.votes.filter(
-                    (v) => !(v.round_id === round.id && v.user_id === state.user.id)
+                const restaurantId = Number(body.restaurantId)
+                if (
+                    !state.restaurants.some(
+                        (restaurant) => restaurant.id === restaurantId && restaurant.active
+                    )
+                ) {
+                    throw new Error("Can only vote for restaurants in the pool")
+                }
+
+                const existing = state.votes.find(
+                    (v) =>
+                        v.round_id === round.id &&
+                        v.user_id === state.user.id &&
+                        v.restaurant_id === restaurantId
                 )
+                if (existing) {
+                    state.votes = state.votes.filter((v) => v !== existing)
+                    save(state)
+                    return { ok: true, selected: false } as T
+                }
+
+                const selectedCount = state.votes.filter(
+                    (v) => v.round_id === round.id && v.user_id === state.user.id
+                ).length
+                if (selectedCount >= MAX_LUNCH_VOTES) {
+                    throw new Error(
+                        `You can vote for at most ${MAX_LUNCH_VOTES} options`
+                    )
+                }
+
                 state.votes.push({
                     round_id: round.id,
                     user_id: state.user.id,
-                    restaurant_id: body.restaurantId,
+                    restaurant_id: restaurantId,
+                    created_at: new Date().toISOString(),
                 })
                 save(state)
-                return { ok: true } as T
+                return { ok: true, selected: true } as T
             }
 
             if (body.action === "close") {
                 const roundVotes = state.votes.filter((v) => v.round_id === round.id)
-                const tally = new Map<number, number>()
-                for (const v of roundVotes) {
-                    tally.set(v.restaurant_id, (tally.get(v.restaurant_id) ?? 0) + 1)
-                }
-                const winnerId =
-                    [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+                const winnerId = pickLunchWinner(
+                    roundVotes.map((v) => ({
+                        restaurant_id: v.restaurant_id,
+                        created_at: v.created_at,
+                    }))
+                )
                 state.lastClosedWinner =
                     state.restaurants.find((r) => r.id === winnerId)?.name ?? null
                 round.status = "closed"

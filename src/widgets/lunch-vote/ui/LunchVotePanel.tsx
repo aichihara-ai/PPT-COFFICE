@@ -5,7 +5,11 @@ import { AddRestaurantLinkForm } from "@/widgets/lunch-vote/ui/AddRestaurantLink
 import { RestaurantMenuPreview } from "@/widgets/lunch-vote/ui/RestaurantMenuPreview"
 import { useCountdown } from "@/shared/lib/use-countdown"
 import type { MenuPreview } from "@/shared/lib/uber-eats-menu"
-import type { LunchPanelData } from "@/entities/lunch-round"
+import {
+    MAX_LUNCH_VOTES,
+    remainingLunchVotes,
+    type LunchPanelData,
+} from "@/entities/lunch-round"
 import type { User } from "@/entities/user"
 import {
     Badge,
@@ -26,14 +30,10 @@ type LunchVotePanelProps = {
     isLoading?: boolean
     compact?: boolean
     onStart: () => void
-    onNominate: (restaurantId: number) => void
-    onLock: () => void
     onVote: (restaurantId: number) => void
     onClose: () => void
     onAddRestaurant: (uberEatsUrl: string) => void
     startPending?: boolean
-    nominatePending?: boolean
-    lockPending?: boolean
     votePending?: boolean
     closePending?: boolean
     addRestaurantPending?: boolean
@@ -70,14 +70,10 @@ export function LunchVotePanel({
     isLoading = false,
     compact = false,
     onStart,
-    onNominate,
-    onLock,
     onVote,
     onClose,
     onAddRestaurant,
     startPending = false,
-    nominatePending = false,
-    lockPending = false,
     votePending = false,
     closePending = false,
     addRestaurantPending = false,
@@ -86,21 +82,13 @@ export function LunchVotePanel({
     const [expandedMenuId, setExpandedMenuId] = useState<number | null>(null)
 
     const round = lunchData?.round
-    const countdown = useCountdown(
-        round?.status === "voting" ? round.voting_ends_at : null
-    )
-
-    if (isLoading) {
-        return <p className="text-sm text-muted-foreground">Loading lunch round…</p>
-    }
-
-    const stepLabel = !round
-        ? "No active round"
-        : round.status === "nominating"
-          ? "Step 1 · Nominate"
-          : "Step 2 · Vote"
-
-    const totalVotes = lunchData?.votes?.length ?? 0
+    const countdown = useCountdown(round ? round.voting_ends_at : null)
+    const myVotes = lunchData?.myVotes ?? []
+    const selectedCount = myVotes.length
+    const remaining = remainingLunchVotes(selectedCount)
+    const atCap = remaining === 0
+    const votedUserCount = new Set((lunchData?.votes ?? []).map((vote) => vote.user_id))
+        .size
     const totalUsers = lunchData?.users?.length ?? 0
     const visibleRestaurants = compact ? restaurants.slice(0, 8) : restaurants
 
@@ -108,11 +96,17 @@ export function LunchVotePanel({
         setExpandedMenuId((current) => (current === restaurantId ? null : restaurantId))
     }
 
+    if (isLoading) {
+        return <p className="text-sm text-muted-foreground">Loading lunch round…</p>
+    }
+
+    const stepLabel = !round ? "No active round" : "Voting open"
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{stepLabel}</Badge>
-                {round?.status === "voting" && round.voting_ends_at ? (
+                {round?.voting_ends_at ? (
                     <Badge variant={countdown.isExpired ? "destructive" : "secondary"}>
                         {countdown.isExpired ? "Time's up" : `${countdown.label} left`}
                     </Badge>
@@ -128,7 +122,7 @@ export function LunchVotePanel({
                 <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
                         {user.isAdmin
-                            ? "Start a round — everyone nominates one spot from the Uber Eats pool."
+                            ? `Start a round — everyone picks up to ${MAX_LUNCH_VOTES} spots. One winner.`
                             : "Waiting for HR to start the next lunch round."}
                     </p>
                     {user.isAdmin ? (
@@ -141,19 +135,26 @@ export function LunchVotePanel({
                         </Button>
                     ) : null}
                 </div>
-            ) : round.status === "nominating" ? (
+            ) : (
                 <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                        Pick one spot — tap a name to nominate. Preview menus before you choose.
+                        Pick up to {MAX_LUNCH_VOTES} · {remaining} remaining ·{" "}
+                        {votedUserCount}/{totalUsers} voted
                     </p>
+                    {atCap ? (
+                        <p className="text-xs text-muted-foreground">
+                            Limit reached — unvote a pick to choose another.
+                        </p>
+                    ) : null}
                     <div className="grid gap-2 sm:grid-cols-2">
                         {visibleRestaurants.map((restaurant) => {
-                            const count =
-                                lunchData?.nominationCounts?.find(
+                            const votes =
+                                lunchData?.voteCounts?.find(
                                     (entry) => entry.restaurant_id === restaurant.id
                                 )?.count ?? 0
-                            const isMine =
-                                lunchData?.myNomination?.restaurant_id === restaurant.id
+                            const isMine = myVotes.some(
+                                (vote) => vote.restaurant_id === restaurant.id
+                            )
                             const menu = restaurantMenu(restaurants, restaurant.id)
                             const menuOpen = expandedMenuId === restaurant.id
 
@@ -166,10 +167,10 @@ export function LunchVotePanel({
                                         <div className="min-w-0 space-y-1">
                                             <p className="font-medium leading-tight">
                                                 {restaurant.name}
-                                                {count > 0 ? (
+                                                {votes > 0 ? (
                                                     <span className="text-muted-foreground">
                                                         {" "}
-                                                        · {count} nom
+                                                        · {votes} vote{votes === 1 ? "" : "s"}
                                                     </span>
                                                 ) : null}
                                             </p>
@@ -204,10 +205,12 @@ export function LunchVotePanel({
                                                 size="sm"
                                                 variant={isMine ? "default" : "outline"}
                                                 className="h-8"
-                                                onClick={() => onNominate(restaurant.id)}
-                                                disabled={nominatePending}
+                                                onClick={() => onVote(restaurant.id)}
+                                                disabled={
+                                                    votePending || countdown.isExpired || (!isMine && atCap)
+                                                }
                                             >
-                                                {isMine ? "Nominated" : "Nominate"}
+                                                {isMine ? "Voted" : "Vote"}
                                             </Button>
                                         </div>
                                     </div>
@@ -216,61 +219,6 @@ export function LunchVotePanel({
                                             <RestaurantMenuPreview menu={menu} compact />
                                         </div>
                                     ) : null}
-                                </div>
-                            )
-                        })}
-                    </div>
-                    <Button
-                        size="sm"
-                        onClick={onLock}
-                        disabled={
-                            lockPending || (lunchData?.nominationCounts?.length ?? 0) === 0
-                        }
-                    >
-                        Lock top 3 → start voting
-                    </Button>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                        Pick one finalist · {totalVotes}/{totalUsers} voted
-                    </p>
-                    <div className="grid gap-3 lg:grid-cols-3">
-                        {(lunchData?.candidates ?? []).map((candidate) => {
-                            const votes =
-                                lunchData?.voteCounts?.find(
-                                    (entry) => entry.restaurant_id === candidate.restaurant_id
-                                )?.count ?? 0
-                            const isMine =
-                                lunchData?.myVote?.restaurant_id === candidate.restaurant_id
-                            const menu = restaurantMenu(restaurants, candidate.restaurant_id)
-
-                            return (
-                                <div
-                                    key={candidate.restaurant_id}
-                                    className="flex min-w-0 flex-col rounded-lg border p-3"
-                                >
-                                    <div className="mb-2 flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
-                                            <p className="font-medium leading-tight">
-                                                {candidate.restaurant_name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {candidate.nomination_count} nominations · {votes}{" "}
-                                                votes
-                                            </p>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            variant={isMine ? "default" : "outline"}
-                                            className="h-8 shrink-0"
-                                            onClick={() => onVote(candidate.restaurant_id)}
-                                            disabled={votePending}
-                                        >
-                                            {isMine ? "Voted" : "Vote"}
-                                        </Button>
-                                    </div>
-                                    <RestaurantMenuPreview menu={menu} compact />
                                 </div>
                             )
                         })}

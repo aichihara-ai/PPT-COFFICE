@@ -19,9 +19,7 @@ import {
 import {
     useAddRestaurantFromLink,
     useCloseLunchRound,
-    useLockLunchCandidates,
     useLunchPanel,
-    useNominateLunch,
     useRestaurants,
     useStartLunchRound,
     useVoteLunch,
@@ -77,6 +75,7 @@ export function DashboardPage() {
     const [bookEnd, setBookEnd] = useState("11:00")
     const [bookTitle, setBookTitle] = useState("Meeting")
     const [snackLink, setSnackLink] = useState("")
+    const [snackTitle, setSnackTitle] = useState("")
 
     const { data: bookingsData, isLoading: bookingsLoading } = useBookings(today)
     const { data: suggestionsData } = useSuggestions()
@@ -89,9 +88,7 @@ export function DashboardPage() {
     const snackUpdateMutation = useUpdateSuggestionStatus()
     const inventoryMutation = useUpdateInventory()
     const lunchStartMutation = useStartLunchRound()
-    const lunchNominateMutation = useNominateLunch()
     const lunchVoteMutation = useVoteLunch()
-    const lunchLockMutation = useLockLunchCandidates()
     const lunchCloseMutation = useCloseLunchRound()
     const addRestaurantMutation = useAddRestaurantFromLink()
 
@@ -103,9 +100,7 @@ export function DashboardPage() {
     const inventory = inventoryData?.inventory ?? []
     const lunchRound = lunchData?.round
     const restaurants = restaurantData?.restaurants ?? []
-    const lunchCountdown = useCountdown(
-        lunchRound?.status === "voting" ? lunchRound.voting_ends_at : null
-    )
+    const lunchCountdown = useCountdown(lunchRound?.voting_ends_at ?? null)
 
     const pantryLow = inventory.some((item) => item.status === "low")
     const pantryDetail = (["coffee", "milk"] as const)
@@ -128,14 +123,10 @@ export function DashboardPage() {
                   .join(" · ")
             : "Loading availability…"
 
-    const lunchValue = lunchRound
-        ? lunchRound.status === "nominating"
-            ? "Nominating"
-            : "Voting"
-        : "Idle"
+    const lunchValue = lunchRound ? "Voting" : "Idle"
 
     const lunchDetail = lunchRound
-        ? lunchRound.status === "voting" && lunchRound.voting_ends_at
+        ? lunchRound.voting_ends_at
             ? lunchCountdown.isExpired
                 ? "Voting closed"
                 : `${lunchCountdown.label} left`
@@ -252,14 +243,20 @@ export function DashboardPage() {
                         <KitchenWishlistForm
                             value={snackLink}
                             onChange={setSnackLink}
+                            title={snackTitle}
+                            onTitleChange={setSnackTitle}
                             onSubmit={() =>
-                                snackAddMutation.mutate(snackLink, {
-                                    onSuccess: () => {
-                                        toast.success("Link added")
-                                        setSnackLink("")
-                                    },
-                                    onError: (e) => toast.error(e.message),
-                                })
+                                snackAddMutation.mutate(
+                                    { text: snackLink, title: snackTitle },
+                                    {
+                                        onSuccess: () => {
+                                            toast.success("Link added")
+                                            setSnackLink("")
+                                            setSnackTitle("")
+                                        },
+                                        onError: (e) => toast.error(e.message),
+                                    }
+                                )
                             }
                             isPending={snackAddMutation.isPending}
                             inputId="dash-kitchen-link"
@@ -272,6 +269,7 @@ export function DashboardPage() {
                                         key={suggestion.id}
                                         id={suggestion.id}
                                         text={suggestion.text}
+                                        title={suggestion.title}
                                         status={suggestion.status}
                                         userName={suggestion.user_name}
                                         isAdmin={user.isAdmin}
@@ -374,7 +372,7 @@ export function DashboardPage() {
                     <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
                         <div>
                             <CardTitle>Lunch vote</CardTitle>
-                            <CardDescription>Nominate → lock top 3 → vote</CardDescription>
+                            <CardDescription>Pick up to 3 · one winner</CardDescription>
                         </div>
                         <Button variant="ghost" size="sm" asChild>
                             <Link href="/lunch">
@@ -395,22 +393,9 @@ export function DashboardPage() {
                                     onError: (e) => toast.error(e.message),
                                 })
                             }
-                            onNominate={(id) =>
-                                lunchNominateMutation.mutate(id, {
-                                    onSuccess: () => toast.success("Nomination saved"),
-                                    onError: (e) => toast.error(e.message),
-                                })
-                            }
-                            onLock={() =>
-                                lunchLockMutation.mutate(undefined, {
-                                    onSuccess: () =>
-                                        toast.success("Top 3 locked — time to vote!"),
-                                    onError: (e) => toast.error(e.message),
-                                })
-                            }
                             onVote={(id) =>
                                 lunchVoteMutation.mutate(id, {
-                                    onSuccess: () => toast.success("Vote recorded"),
+                                    onSuccess: () => toast.success("Vote updated"),
                                     onError: (e) => toast.error(e.message),
                                 })
                             }
@@ -428,8 +413,6 @@ export function DashboardPage() {
                                 })
                             }
                             startPending={lunchStartMutation.isPending}
-                            nominatePending={lunchNominateMutation.isPending}
-                            lockPending={lunchLockMutation.isPending}
                             votePending={lunchVoteMutation.isPending}
                             closePending={lunchCloseMutation.isPending}
                             addRestaurantPending={addRestaurantMutation.isPending}

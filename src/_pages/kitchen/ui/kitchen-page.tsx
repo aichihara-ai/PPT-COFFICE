@@ -23,6 +23,7 @@ import {
 export function KitchenPage() {
     const user = useRequiredUser()
     const [link, setLink] = useState("")
+    const [title, setTitle] = useState("")
 
     const { data, isLoading } = useSuggestions()
     const addMutation = useAddSuggestion()
@@ -34,7 +35,7 @@ export function KitchenPage() {
     return (
         <PageShell
             title="Kitchen wishlist"
-            description="Share product links for the office kitchen. HR can mark items as bought."
+            description="Share product links for the office kitchen. Add an optional title so the list is readable. HR can mark items as bought."
         >
             <div className="flex flex-col gap-6">
                 <Card>
@@ -48,14 +49,20 @@ export function KitchenPage() {
                         <KitchenWishlistForm
                             value={link}
                             onChange={setLink}
+                            title={title}
+                            onTitleChange={setTitle}
                             onSubmit={() =>
-                                addMutation.mutate(link, {
-                                    onSuccess: () => {
-                                        toast.success("Link added to wishlist")
-                                        setLink("")
-                                    },
-                                    onError: (e) => toast.error(e.message),
-                                })
+                                addMutation.mutate(
+                                    { text: link, title },
+                                    {
+                                        onSuccess: () => {
+                                            toast.success("Link added to wishlist")
+                                            setLink("")
+                                            setTitle("")
+                                        },
+                                        onError: (e) => toast.error(e.message),
+                                    }
+                                )
                             }
                             isPending={addMutation.isPending}
                         />
@@ -82,6 +89,7 @@ export function KitchenPage() {
                                     key={suggestion.id}
                                     id={suggestion.id}
                                     text={suggestion.text}
+                                    title={suggestion.title}
                                     status={suggestion.status}
                                     userName={suggestion.user_name}
                                     isAdmin={user.isAdmin}

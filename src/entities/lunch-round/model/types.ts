@@ -30,6 +30,7 @@ export type LunchPanelData = {
     votes: Array<{
         user_id: number
         restaurant_id: number
+        created_at?: string
         user_name?: string
         restaurant_name?: string
     }>
@@ -41,6 +42,7 @@ export type LunchPanelData = {
     users: Array<{ id: number; name: string }>
     myNomination: { restaurant_id: number } | null
     myVote: { restaurant_id: number } | null
+    myVotes: Array<{ restaurant_id: number }>
 }
 
 export type LunchRound = {

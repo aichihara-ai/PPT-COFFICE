@@ -7,7 +7,7 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
 - **Meeting rooms** — book Maple or Cedar room, see live busy/free status
 - **Kitchen snacks** — suggest items; HR admin marks bought/declined
 - **Coffee & milk** — team updates inventory levels
-- **Office lunch** — restaurant pool, nominate → lock top 3 → vote once
+- **Office lunch** — restaurant pool, one-step vote (up to 3 picks), single winner
 
 ## Stack
 
