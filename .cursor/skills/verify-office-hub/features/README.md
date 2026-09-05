@@ -4,11 +4,11 @@ This directory is the maintained source for verifying user-facing behavior of Of
 
 ## Baseline preconditions
 
-- App is at `http://127.0.0.1:5173` in **Vite demo mode** (`npm run dev`), not `vercel dev`, unless a feature file says API mode.
+- App is at `http://127.0.0.1:3000` using the **Next.js production build in demo mode** unless a feature file says API mode.
 - Run `.cursor/skills/verify-office-hub/bin/control-office-hub doctor` and require `verdict=healthy` and `identity=office-hub`.
 - Demo header shows **Team** / **HR Admin**. There is no login wall.
 - Prefer a fresh tab. Do not hijack a teammate's live session on the shared Neon backend.
-- Never start a second Vite on 5173 (`strictPort`). Never kill a process you did not launch via `control-office-hub`.
+- Never start a second server on port 3000. Never kill a process you did not launch via `control-office-hub`.
 
 ## Driving conventions
 

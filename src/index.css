@@ -1,8 +1,0 @@
-@import "../theme-packages/standard/tailwind/theme.css";
-
-@source "../node_modules/@ppt/luminis";
-@source "./";
-
-td[style*="sticky"] .mx-auto {
-    margin-right: 0;
-}

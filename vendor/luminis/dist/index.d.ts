@@ -68,11 +68,11 @@ declare function AlertDialogAction({ className, ...props }: React$1.ComponentPro
 declare function AlertDialogCancel({ className, ...props }: React$1.ComponentProps<typeof AlertDialogPrimitive.Cancel>): React$1.JSX.Element;
 
 declare const buttonVariants: (props?: ({
-    variant?: "default" | "destructive" | "link" | "secondary" | "outline" | "ghost" | null | undefined;
+    variant?: "default" | "destructive" | "secondary" | "outline" | "ghost" | "link" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & class_variance_authority_dist_types.ClassProp) | undefined) => string;
 declare const Button: React$1.ForwardRefExoticComponent<Omit<React$1.DetailedHTMLProps<React$1.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref"> & VariantProps<(props?: ({
-    variant?: "default" | "destructive" | "link" | "secondary" | "outline" | "ghost" | null | undefined;
+    variant?: "default" | "destructive" | "secondary" | "outline" | "ghost" | "link" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & class_variance_authority_dist_types.ClassProp) | undefined) => string> & {
     asChild?: boolean;
@@ -664,6 +664,30 @@ declare const parseDateInput: (value: string) => Date | undefined;
 type View = "grid" | "list" | "table";
 
 /**
+ * Available cell types for data display
+ * @description Determines how cell data is rendered and what interactions are available
+ * - "avatar": User profile image with fallback
+ * - "text": Plain text display
+ * - "switch": Toggle switch for boolean values
+ * - "button": Interactive button element
+ * - "checkbox": Checkbox for selection
+ * - "progress": Progress bar visualization
+ * - "multiBadge": Multiple badge elements
+ * - "badge": Single badge element (default secondary); options.badge.getTone(row) returns success/destructive outline tones
+ * - "statusBadge": Status indicator badge; options.statusBadge.colourMap (dot), labelColourMap (label tone), showDot (optional dot)
+ * - "thumbnail": Image thumbnail
+ * - "dateLong": Full date format
+ * - "dateHoursAgo": Relative time format
+ * - "multiAction": Multiple action buttons/menu
+ * - "currency": Formatted currency display
+ * - "link": Clickable link element
+ * - "indicator": Read-only tri-state icon (yes / no / na)
+ * - "textWithMeta": Primary + optional secondary text parts with shared decoration/link options
+ */
+type CellType = "avatar" | "text" | "switch" | "button" | "checkbox" | "progress" | "multiBadge" | "badge" | "statusBadge" | "thumbnail" | "dateLong" | "dateHoursAgo" | "multiAction" | "currency" | "link" | "indicator" | "textWithMeta";
+type DataViewIndicatorValue = "yes" | "no" | "na";
+
+/**
  * Values for select-type headers
  * @description Can be a simple string or an object with label and value
  */
@@ -859,9 +883,9 @@ type FilterButtonSheetProps = {
 type HeaderConfig<TData> = {
     /**
      * Title text for the table
-     * @description Displayed prominently in the header area
+     * @description Displayed prominently in the header area when provided
      */
-    title: string;
+    title?: string;
     /**
      * Show the columns visibility dropdown
      * @description Enables users to toggle column visibility
@@ -925,6 +949,8 @@ declare module "@tanstack/react-table" {
         pinTo?: "right" | "left";
         /** Used by DataTable to apply sort-header-only cell chrome */
         headerType?: HeaderType;
+        /** Cell renderer type from the consumer column definition */
+        cellType?: CellType;
         /** Narrow padding for the injected row drag-handle column */
         isRowDragHandleColumn?: boolean;
     }
@@ -1018,30 +1044,6 @@ type FooterElements<TData> = {
      */
     rightSide?: FooterElement<TData>[];
 };
-
-/**
- * Available cell types for data display
- * @description Determines how cell data is rendered and what interactions are available
- * - "avatar": User profile image with fallback
- * - "text": Plain text display
- * - "switch": Toggle switch for boolean values
- * - "button": Interactive button element
- * - "checkbox": Checkbox for selection
- * - "progress": Progress bar visualization
- * - "multiBadge": Multiple badge elements
- * - "badge": Single badge element (default secondary); options.badge.getTone(row) returns success/destructive outline tones
- * - "statusBadge": Status indicator badge; options.statusBadge.colourMap (dot), labelColourMap (label tone), showDot (optional dot)
- * - "thumbnail": Image thumbnail
- * - "dateLong": Full date format
- * - "dateHoursAgo": Relative time format
- * - "multiAction": Multiple action buttons/menu
- * - "currency": Formatted currency display
- * - "link": Clickable link element
- * - "indicator": Read-only tri-state icon (yes / no / na)
- * - "textWithMeta": Primary + optional secondary text parts with shared decoration/link options
- */
-type CellType = "avatar" | "text" | "switch" | "button" | "checkbox" | "progress" | "multiBadge" | "badge" | "statusBadge" | "thumbnail" | "dateLong" | "dateHoursAgo" | "multiAction" | "currency" | "link" | "indicator" | "textWithMeta";
-type DataViewIndicatorValue = "yes" | "no" | "na";
 
 type SelectionContext<TData> = {
     /**
@@ -1637,6 +1639,12 @@ type Column<TData> = {
     minSize?: number;
     size?: number;
     /**
+     * Stable TanStack column id
+     * @description Required when accessorKey is empty (checkbox, multiAction).
+     * @example "select"
+     */
+    id?: string;
+    /**
      * Key to access data from the row object
      * @description Must match a property name in your data objects
      * @example "name", "email", "id"
@@ -2200,6 +2208,13 @@ type DataViewProps<TData> = {
          * Required when `enableRowReorder` is true.
          */
         getRowId?: (originalRow: TData, index: number) => string;
+        /**
+         * Stable namespace for column visibility and pinning in localStorage.
+         * Takes precedence over `headerConfig.title`. When omitted and no title
+         * is set, each DataView instance uses its own storage key so untitled
+         * tables on the same page do not overwrite each other.
+         */
+        persistenceId?: string;
     } & ({
         enableRowReorder: true;
         getRowId: (originalRow: TData, index: number) => string;

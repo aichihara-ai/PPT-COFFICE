@@ -1,0 +1,8 @@
+ts	phase	decision	why	evidence	result
+2026-09-05T14:51:00Z	frame	移行前のビルドと lint を実行した	移行で壊した箇所と既存不具合を区別するため	package.json	build passed; lint failed because eslint.config was missing
+2026-09-05T14:52:00Z	frame	移行前のダッシュボードをブラウザで確認した	見た目と主要導線を移行後に直接比較するため	http://localhost:5173	92 accessible nodes and the full dashboard rendered
+2026-09-05T14:53:00Z	design	Next の app はルーティングだけに使い FSD は src/_app と src/_pages に置く	Next と FSD の予約名衝突を避け公式ガイドに従う	https://feature-sliced.design/docs/guides/tech/with-nextjs	chosen
+2026-09-05T14:56:00Z	harness	移行の合格条件を一つのスクリプトにした	構造と生成と lint と build を同じ手順で再検証するため	scripts/verify-migration.mjs	expected failure before migration
+2026-09-05T15:14:00Z	implementation	Next.js 16 と Prisma 7 と FSD の全経路へ移行した	旧 runtime と互換層を残さず target architecture に収束させるため	docs/next-prisma-fsd.md	implementation completed; independent review started
+2026-09-05T15:18:00Z	review	Steiger の依存方向と public API の規則を再度有効にした	無効化された検査が shared から entities と widget から app への逆依存を隠していた	steiger.config.js	violations reproduced, then fixed
+2026-09-05T15:21:00Z	review	旧 SQL を読む setup を Prisma の冪等 seed に置き換えた	Prisma schema を唯一の DB 定義にするため	src/_app/api-routes/setup/index.ts	db/schema.sql and db/seed.sql removed

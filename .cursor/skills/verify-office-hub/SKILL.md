@@ -1,15 +1,15 @@
 ---
 name: verify-office-hub
-description: Drive the Office Hub web app (Vite + React office tools) the way a Vancouver teammate would — dashboard, meeting rooms, kitchen wishlist, coffee/milk, lunch votes. Use when proving a UI or API change works in the running app, not only in unit tests.
+description: Drive the Office Hub Next.js web app the way a Vancouver teammate would — dashboard, meeting rooms, kitchen wishlist, coffee/milk, lunch votes. Use when proving a UI or API change works in the running app, not only in unit tests.
 ---
 
 # Verify Office Hub
 
-Office Hub is the Vancouver internal office web app in this repo (`office-hub`). The primary user surface is the **browser UI**. There is no first-party CLI. Serverless routes live under `/api/*` and are a secondary surface (curl) when `vercel dev` or a deployed backend is in play.
+Office Hub is the Vancouver internal office web app in this repo (`office-hub`). The primary user surface is the **browser UI**. There is no first-party CLI. Next.js Route Handlers live under `/api/*` and are a secondary surface for curl checks.
 
-Default verification uses **Vite demo mode** (`npm run dev` on port **5173**). Demo mode does **not** hit Neon. State lives in the browser `localStorage` key `office-hub-demo`. Protected routes skip login in demo mode. The header shows **Team** / **HR Admin** role toggles instead of **Sign out**.
+Default verification uses the **Next.js production build in demo mode** (`npm run build` then `npm start` on port **3000**). Demo mode does **not** hit Neon. State lives in the browser `localStorage` key `office-hub-demo`. Protected routes skip login in demo mode. The header shows **Team** / **HR Admin** role toggles instead of **Sign out**.
 
-`npx vercel dev` / `npm run dev:full` (typically port **3000**) is API mode: JWT login, shared Neon Postgres. Do not treat that as an isolated sandbox. Never start a second API-mode instance against the same `DATABASE_URL` to "parallelize" verification.
+Set `NEXT_PUBLIC_USE_API=true` before launching the build to use API mode with cookie login and shared Neon Postgres. Do not treat that as an isolated sandbox. Never start a second API-mode instance against the same `DATABASE_URL` to parallelize verification.
 
 ## Launch
 
@@ -19,7 +19,7 @@ From repo root:
 .cursor/skills/verify-office-hub/bin/control-office-hub launch
 ```
 
-Ready when `curl -fsS http://127.0.0.1:5173/` HTML contains `Office Hub — Vancouver` (document title in `index.html`). Vite uses `strictPort: true`, so a second server on 5173 will fail; the helper refuses to start if 5173 is already taken.
+Ready when `curl -fsS http://127.0.0.1:3000/` HTML contains `Office Hub — Vancouver`. The helper refuses to start if port 3000 already serves another process.
 
 Teardown (only the PID this helper started):
 
@@ -29,7 +29,7 @@ Teardown (only the PID this helper started):
 
 If doctor reports `owner=foreign-or-preexisting`, do **not** run cleanup expecting to free the port. Leave that process alone.
 
-Demo isolation: Vite cannot bind 5173 twice. Two Chrome profiles on the same origin still share `localStorage` unless you use a separate browser user-data-dir. Prefer a dedicated DevTools/MCP page and restore demo state after mutations (see Cleanup). Do not drive the user's already-open Office Hub tab if it might be a live work session; launch/doctor first and prefer a fresh tab at `http://127.0.0.1:5173/`.
+Demo isolation: two Chrome profiles on the same origin share `localStorage` unless you use a separate browser user-data-dir. Prefer a dedicated DevTools/MCP page and restore demo state after mutations (see Cleanup). Do not drive the user's already-open Office Hub tab if it might be a live work session; launch/doctor first and prefer a fresh tab at `http://127.0.0.1:3000/`.
 
 ## Doctor
 
@@ -37,7 +37,7 @@ Demo isolation: Vite cannot bind 5173 twice. Two Chrome profiles on the same ori
 .cursor/skills/verify-office-hub/bin/control-office-hub doctor
 ```
 
-Require `verdict=healthy`, `identity=office-hub`, `url=http://127.0.0.1:5173`. Run this first whenever the page looks wrong, the port might be stale, or launch just finished.
+Require `verdict=healthy`, `identity=office-hub`, `url=http://127.0.0.1:3000`. Run this first whenever the page looks wrong, the port might be stale, or launch just finished.
 
 In API mode (only if the task explicitly needs Neon): `GET /api/auth/me` with `Authorization: Bearer <token>` must 200. Unauthenticated `GET /api/bookings` must 401. Do not use `/api/setup` during verification.
 
@@ -81,7 +81,7 @@ Proof standards:
 .cursor/skills/verify-office-hub/bin/control-office-hub cleanup
 ```
 
-Kills only the PID in `.cursor/skills/verify-office-hub/.run/vite.pid`. Never `pkill -f vite` / `pkill node`.
+Kills only the PID in `.cursor/skills/verify-office-hub/.run/next.pid`. Never use a broad process kill.
 
 Fixture rollback (demo): cancel bookings titled `verify-office-hub`; do not wipe the whole `office-hub-demo` key unless this run created the browser profile. Leave `artifacts/` in place.
 

@@ -27,7 +27,7 @@ Preconditions:
 - **Open dialog.** Click `Book a room`. Dialog title `Book a meeting room` appears with Room, Title, Start, End.
 - **Set title.** Fill the Title field with `verify-office-hub` (leave default room Big / `🟦 Big` and default times if free).
 - **Save.** Click `Book room`. Dialog closes. A toast `Room booked` may appear. The bookings list includes `verify-office-hub`.
-- **Confirm persistence.** Reload `http://127.0.0.1:5173/rooms`. The same title is still listed with the chosen times.
+- **Confirm persistence.** Reload `http://127.0.0.1:3000/rooms`. The same title is still listed with the chosen times.
 - **Cancel.** Click `Cancel` on that row. Toast `Booking cancelled`. The title is gone.
 - **Proof.** Before cancel, snapshot `artifacts/meeting-rooms/booked.aria.txt` and screenshot `artifacts/meeting-rooms/booked.png` showing `verify-office-hub`. After cancel, capture `artifacts/meeting-rooms/cancelled.aria.txt`.
 
