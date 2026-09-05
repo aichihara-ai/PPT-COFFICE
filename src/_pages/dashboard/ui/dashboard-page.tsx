@@ -20,9 +20,10 @@ import {
     useAddRestaurantFromLink,
     useCloseLunchRound,
     useLunchPanel,
+    usePickLunch,
     useRestaurants,
+    useSetGroupOrderLink,
     useStartLunchRound,
-    useVoteLunch,
 } from "@/features/manage-lunch"
 import { formatLocalDate, ROOM_CONFIG, type RoomId } from "@/entities/booking"
 import { INVENTORY_ITEM_CONFIG } from "@/entities/inventory"
@@ -88,8 +89,9 @@ export function DashboardPage() {
     const snackUpdateMutation = useUpdateSuggestionStatus()
     const inventoryMutation = useUpdateInventory()
     const lunchStartMutation = useStartLunchRound()
-    const lunchVoteMutation = useVoteLunch()
+    const lunchPickMutation = usePickLunch()
     const lunchCloseMutation = useCloseLunchRound()
+    const lunchGroupOrderMutation = useSetGroupOrderLink()
     const addRestaurantMutation = useAddRestaurantFromLink()
 
     const roomStatus = bookingsData?.roomStatus ?? []
@@ -391,15 +393,14 @@ export function DashboardPage() {
                             restaurants={restaurants}
                             user={user}
                             compact
-                            onStart={() =>
-                                lunchStartMutation.mutate(undefined, {
+                            onStart={(votingEndsAt) =>
+                                lunchStartMutation.mutate(votingEndsAt, {
                                     onSuccess: () => toast.success("Lunch round started"),
                                     onError: (e) => toast.error(e.message),
                                 })
                             }
-                            onVote={(id) =>
-                                lunchVoteMutation.mutate(id, {
-                                    onSuccess: () => toast.success("Vote updated"),
+                            onPick={(id) =>
+                                lunchPickMutation.mutate(id, {
                                     onError: (e) => toast.error(e.message),
                                 })
                             }
@@ -416,10 +417,17 @@ export function DashboardPage() {
                                     onError: (e) => toast.error(e.message),
                                 })
                             }
+                            onSetGroupOrderLink={(url) =>
+                                lunchGroupOrderMutation.mutate(url, {
+                                    onSuccess: () => toast.success("Group order link saved"),
+                                    onError: (e) => toast.error(e.message),
+                                })
+                            }
                             startPending={lunchStartMutation.isPending}
-                            votePending={lunchVoteMutation.isPending}
+                            pickPending={lunchPickMutation.isPending}
                             closePending={lunchCloseMutation.isPending}
                             addRestaurantPending={addRestaurantMutation.isPending}
+                            groupOrderPending={lunchGroupOrderMutation.isPending}
                         />
                     </CardContent>
                 </Card>
