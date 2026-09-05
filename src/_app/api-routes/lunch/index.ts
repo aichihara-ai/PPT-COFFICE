@@ -3,67 +3,139 @@ import "server-only"
 import type { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { MAX_LUNCH_VOTES, pickLunchWinner } from "@/entities/lunch-round"
 import { prisma } from "@/shared/db/index.server"
-import {
-    jsonResponse,
-    requireAdmin,
-    requireUser,
-} from "@/shared/auth/index.server"
+import { jsonResponse, methodNotAllowed, requireAdmin, requireUser } from "@/shared/auth/index.server"
+import { resolveLunchWinners } from "@/shared/lib/lunch-round"
 
-const actionSchema = z.object({
-    action: z.enum(["start", "nominate", "lock", "vote", "close"]),
-    restaurantId: z.number().optional(),
-})
+const PICKS_REQUIRED = 3
+const DEFAULT_DEADLINE_MINUTES = 30
+const DUAL_WINNER_THRESHOLD = 0.4
 
-async function getActiveRound() {
-    return prisma.lunchRound.findFirst({
-        where: { status: { in: ["nominating", "voting"] } },
-        orderBy: { createdAt: "desc" },
-        include: { createdByUser: { select: { name: true } } },
+function normalizeGroupOrderUrl(value: unknown) {
+    if (typeof value !== "string") return ""
+    const trimmed = value.trim()
+    if (!trimmed) return ""
+
+    try {
+        const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+        const url = new URL(withProtocol)
+        if (url.protocol !== "http:" && url.protocol !== "https:") {
+            return ""
+        }
+        return url.toString()
+    } catch {
+        return ""
+    }
+}
+
+function parseVotingEndsAt(value: unknown): Date | null {
+    if (typeof value !== "string" || !value.trim()) return null
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return null
+    if (parsed.getTime() <= Date.now()) return null
+    const maxAheadMs = 24 * 60 * 60 * 1000
+    if (parsed.getTime() > Date.now() + maxAheadMs) return null
+    return parsed
+}
+
+async function getLastClosedRound() {
+    return await prisma.lunchRound.findFirst({
+        where: { status: "closed" },
+        orderBy: { closedAt: "desc" },
+        include: {
+            winnerRestaurant: { select: { name: true } },
+            secondWinnerRestaurant: { select: { name: true } },
+        },
     })
 }
 
-export async function GET(request: NextRequest) {
-    const auth = await requireUser(request)
-    if ("error" in auth) return auth.error
+async function getActiveRound() {
+    return await prisma.lunchRound.findFirst({
+        where: { status: "nominating" },
+        orderBy: { createdAt: "desc" },
+        include: {
+            createdByUser: { select: { name: true } },
+        },
+    })
+}
 
-    const round = await getActiveRound()
+async function getParticipation(roundId: number) {
+    const users = await prisma.user.findMany({ orderBy: { name: "asc" } })
+    const completed = await prisma.lunchNomination.groupBy({
+        by: ["userId"],
+        where: { roundId },
+        having: { userId: { _count: { equals: PICKS_REQUIRED } } },
+    })
+    return {
+        users,
+        total: users.length,
+        completed: completed.length,
+    }
+}
 
-    if (!round) {
-        const lastClosed = await prisma.lunchRound.findFirst({
-            where: { status: "closed" },
-            orderBy: { closedAt: "desc" },
-            include: {
-                winnerRestaurant: { select: { name: true } },
-            },
-        })
+async function shouldAutoClose(roundId: number, votingEndsAt: Date | null) {
+    return votingEndsAt != null && new Date() >= votingEndsAt
+}
 
-        return jsonResponse(200, {
-            round: null,
-            lastClosed: lastClosed
-                ? {
-                      id: lastClosed.id,
-                      status: lastClosed.status,
-                      closed_at: lastClosed.closedAt?.toISOString() ?? null,
-                      winner_restaurant_id: lastClosed.winnerRestaurantId,
-                      winner_name: lastClosed.winnerRestaurant?.name ?? null,
-                  }
-                : null,
-            nominations: [],
-            nominationCounts: [],
-            candidates: [],
-            votes: [],
-            voteCounts: [],
-            users: [],
-            myNomination: null,
-            myVote: null,
-            myVotes: [],
-        })
+async function finalizeRound(roundId: number) {
+    const tally = await prisma.lunchNomination.groupBy({
+        by: ["restaurantId"],
+        where: { roundId },
+        _count: { restaurantId: true },
+        _min: { createdAt: true },
+        orderBy: [
+            { _count: { restaurantId: "desc" } },
+            { _min: { createdAt: "asc" } },
+        ],
+    })
+
+    const totalPicks = tally.reduce((sum, row) => sum + row._count.restaurantId, 0)
+    const winnerId = tally[0]?.restaurantId ?? null
+    let secondWinnerId: number | null = null
+
+    if (tally.length >= 2 && totalPicks > 0) {
+        const secondShare = tally[1]._count.restaurantId / totalPicks
+        if (secondShare >= DUAL_WINNER_THRESHOLD) {
+            secondWinnerId = tally[1].restaurantId
+        }
     }
 
+    await prisma.lunchRound.update({
+        where: { id: roundId },
+        data: {
+            status: "closed",
+            winnerRestaurantId: winnerId,
+            secondWinnerRestaurantId: secondWinnerId,
+            closedAt: new Date(),
+        },
+    })
+
+    const round = await prisma.lunchRound.findUnique({
+        where: { id: roundId },
+        include: {
+            winnerRestaurant: { select: { name: true } },
+            secondWinnerRestaurant: { select: { name: true } },
+        },
+    })
+
+    return {
+        winnerId,
+        secondWinnerId,
+        winnerName: round?.winnerRestaurant?.name ?? null,
+        secondWinnerName: round?.secondWinnerRestaurant?.name ?? null,
+    }
+}
+
+async function buildRoundPayload(roundId: number, userId: number) {
+    const round = await prisma.lunchRound.findUnique({
+        where: { id: roundId },
+        include: { createdByUser: { select: { name: true } } },
+    })
+
+    if (!round) return null
+
     const nominations = await prisma.lunchNomination.findMany({
-        where: { roundId: round.id },
+        where: { roundId },
         include: {
             user: { select: { name: true } },
             restaurant: { select: { name: true } },
@@ -73,160 +145,149 @@ export async function GET(request: NextRequest) {
 
     const nominationCounts = await prisma.lunchNomination.groupBy({
         by: ["restaurantId"],
-        where: { roundId: round.id },
+        where: { roundId },
         _count: { restaurantId: true },
         _min: { createdAt: true },
-        orderBy: [{ _count: { restaurantId: "desc" } }],
+        orderBy: [
+            { _count: { restaurantId: "desc" } },
+            { _min: { createdAt: "asc" } },
+        ],
     })
 
-    const nominationCountRows = await Promise.all(
-        nominationCounts.map(async (row) => {
-            const restaurant = await prisma.restaurant.findUnique({
-                where: { id: row.restaurantId },
-                select: { name: true },
-            })
-            return {
-                restaurant_id: row.restaurantId,
-                restaurant_name: restaurant?.name ?? "",
-                count: row._count.restaurantId,
-                first_nominated_at: row._min.createdAt?.toISOString(),
-            }
-        })
-    )
-
-    nominationCountRows.sort((a, b) => {
-        if (b.count !== a.count) return b.count - a.count
-        return (a.first_nominated_at ?? "").localeCompare(b.first_nominated_at ?? "")
-    })
-
-    const candidates = await prisma.lunchCandidate.findMany({
-        where: { roundId: round.id },
-        include: { restaurant: { select: { name: true } } },
-        orderBy: [{ nominationCount: "desc" }, { restaurant: { name: "asc" } }],
-    })
-
-    const votes = await prisma.lunchVote.findMany({
-        where: { roundId: round.id },
-        include: {
-            user: { select: { name: true } },
-            restaurant: { select: { name: true } },
-        },
-    })
-
-    const voteCounts = await prisma.lunchVote.groupBy({
-        by: ["restaurantId"],
-        where: { roundId: round.id },
-        _count: { restaurantId: true },
-    })
-
-    const voteCountRows = await Promise.all(
-        voteCounts.map(async (row) => {
-            const restaurant = await prisma.restaurant.findUnique({
-                where: { id: row.restaurantId },
-                select: { name: true },
-            })
-            return {
-                restaurant_id: row.restaurantId,
-                restaurant_name: restaurant?.name ?? "",
-                count: row._count.restaurantId,
-            }
-        })
-    )
-
-    voteCountRows.sort((a, b) =>
-        b.count !== a.count
-            ? b.count - a.count
-            : a.restaurant_name.localeCompare(b.restaurant_name)
-    )
-
-    const users = await prisma.user.findMany({
+    const restaurantNames = await prisma.restaurant.findMany({
+        where: { id: { in: nominationCounts.map((n) => n.restaurantId) } },
         select: { id: true, name: true },
-        orderBy: { name: "asc" },
     })
 
-    const myNomination = nominations.find((n) => n.userId === auth.user.id)
-    const myVotes = votes
-        .filter((v) => v.userId === auth.user.id)
-        .map((v) => ({ restaurant_id: v.restaurantId }))
-    const myVote = myVotes[0] ?? null
+    const myPicks = nominations
+        .filter((n) => n.userId === userId)
+        .map((n) => n.restaurantId)
 
-    return jsonResponse(200, {
+    const participation = await getParticipation(roundId)
+
+    return {
         round: {
             id: round.id,
             status: round.status,
-            created_at: round.createdAt.toISOString(),
             created_by: round.createdBy,
             created_by_name: round.createdByUser.name,
-            winner_restaurant_id: round.winnerRestaurantId,
-            closed_at: round.closedAt?.toISOString() ?? null,
             voting_ends_at: round.votingEndsAt?.toISOString() ?? null,
+            created_at: round.createdAt.toISOString(),
+            closed_at: round.closedAt?.toISOString() ?? null,
         },
-        lastClosed: null,
-        nominations: nominations.map((n) => ({
-            user_id: n.userId,
-            restaurant_id: n.restaurantId,
-            created_at: n.createdAt.toISOString(),
-            user_name: n.user.name,
-            restaurant_name: n.restaurant.name,
+        nominationCounts: nominationCounts.map((nc) => ({
+            restaurant_id: nc.restaurantId,
+            restaurant_name: restaurantNames.find((r) => r.id === nc.restaurantId)?.name ?? "",
+            count: nc._count.restaurantId,
         })),
-        nominationCounts: nominationCountRows,
-        candidates: candidates.map((c) => ({
-            restaurant_id: c.restaurantId,
-            restaurant_name: c.restaurant.name,
-            nomination_count: c.nominationCount,
-        })),
-        votes: votes.map((v) => ({
-            user_id: v.userId,
-            restaurant_id: v.restaurantId,
-            created_at: v.createdAt.toISOString(),
-            user_name: v.user.name,
-            restaurant_name: v.restaurant.name,
-        })),
-        voteCounts: voteCountRows,
-        users,
-        myNomination: myNomination
-            ? { restaurant_id: myNomination.restaurantId }
-            : null,
-        myVote,
-        myVotes,
-    })
+        users: participation.users.map((u) => ({ id: u.id, name: u.name })),
+        myPicks,
+        pickCount: myPicks.length,
+        isComplete: myPicks.length === PICKS_REQUIRED,
+        participation: {
+            completed: participation.completed,
+            total: participation.total,
+        },
+    }
+}
+
+export async function GET(request: NextRequest) {
+    const auth = await requireUser(request)
+    if ("error" in auth) return auth.error
+
+    const user = auth.user
+
+    let round = await getActiveRound()
+
+    if (round) {
+        if (await shouldAutoClose(round.id, round.votingEndsAt)) {
+            await finalizeRound(round.id)
+            round = null
+        }
+    }
+
+    if (!round) {
+        const lastClosed = await getLastClosedRound()
+        return jsonResponse(200, {
+            round: null,
+            lastClosed: lastClosed
+                ? {
+                      id: lastClosed.id,
+                      winner_name: lastClosed.winnerRestaurant?.name ?? null,
+                      second_winner_name: lastClosed.secondWinnerRestaurant?.name ?? null,
+                      group_order_url: lastClosed.groupOrderUrl ?? null,
+                  }
+                : null,
+        })
+    }
+
+    const payload = await buildRoundPayload(round.id, user.id)
+    return jsonResponse(200, payload)
 }
 
 export async function POST(request: NextRequest) {
     const auth = await requireUser(request)
     if ("error" in auth) return auth.error
 
-    const parsed = actionSchema.safeParse(await request.json())
-    if (!parsed.success) {
-        return jsonResponse(400, { error: "Unknown action" })
+    const user = auth.user
+    const body = await request.json()
+
+    const action = body.action
+
+    if (action === "setGroupOrderLink") {
+        if (!(await requireAdmin(user))) {
+            return jsonResponse(403, { error: "Admin required" })
+        }
+
+        const groupOrderUrl = normalizeGroupOrderUrl(body.groupOrderUrl)
+        if (!groupOrderUrl) {
+            return jsonResponse(400, { error: "Valid group order link required" })
+        }
+
+        const lastClosed = await getLastClosedRound()
+        if (!lastClosed) {
+            return jsonResponse(404, { error: "No finalized lunch round yet" })
+        }
+
+        await prisma.lunchRound.update({
+            where: { id: lastClosed.id },
+            data: { groupOrderUrl },
+        })
+
+        return jsonResponse(200, { ok: true, groupOrderUrl })
     }
 
-    const { action, restaurantId } = parsed.data
-
     if (action === "start") {
-        const denied = requireAdmin(auth.user)
-        if (denied) return denied
+        if (!(await requireAdmin(user))) {
+            return jsonResponse(403, { error: "Admin required" })
+        }
 
         const existing = await getActiveRound()
         if (existing) {
             return jsonResponse(409, { error: "A lunch round is already active" })
         }
 
-        const created = await prisma.lunchRound.create({
+        const poolCount = await prisma.restaurant.count({ where: { active: true } })
+        if (poolCount < PICKS_REQUIRED) {
+            return jsonResponse(400, {
+                error: `Need at least ${PICKS_REQUIRED} restaurants in the pool to start`,
+            })
+        }
+
+        const votingEndsAt = parseVotingEndsAt(body.votingEndsAt)
+        if (!votingEndsAt) {
+            return jsonResponse(400, { error: "Valid votingEndsAt required" })
+        }
+
+        const round = await prisma.lunchRound.create({
             data: {
-                status: "voting",
-                createdBy: auth.user.id,
-                votingEndsAt: new Date(Date.now() + 15 * 60 * 1000),
+                status: "nominating",
+                createdBy: user.id,
+                votingEndsAt,
             },
         })
 
-        return jsonResponse(201, {
-            round: {
-                id: created.id,
-                status: created.status,
-                created_at: created.createdAt.toISOString(),
-            },
-        })
+        return jsonResponse(201, { round })
     }
 
     const round = await getActiveRound()
@@ -234,171 +295,71 @@ export async function POST(request: NextRequest) {
         return jsonResponse(404, { error: "No active lunch round" })
     }
 
-    if (action === "nominate") {
-        if (round.status !== "nominating") {
-            return jsonResponse(400, { error: "Nomination phase is closed" })
-        }
+    const roundId = round.id
 
+    if (action === "pick" || action === "nominate") {
+        const restaurantId = Number(body.restaurantId)
         if (!restaurantId) {
             return jsonResponse(400, { error: "Restaurant required" })
         }
 
-        await prisma.lunchNomination.upsert({
-            where: {
-                roundId_userId: {
-                    roundId: round.id,
-                    userId: auth.user.id,
-                },
-            },
-            create: {
-                roundId: round.id,
-                userId: auth.user.id,
-                restaurantId,
-            },
-            update: {
-                restaurantId,
-                createdAt: new Date(),
-            },
-        })
-
-        return jsonResponse(200, { ok: true })
-    }
-
-    if (action === "lock") {
-        if (!auth.user.isAdmin && round.createdBy !== auth.user.id) {
-            return jsonResponse(403, {
-                error: "Only admin or round starter can lock candidates",
-            })
-        }
-
-        if (round.status !== "nominating") {
-            return jsonResponse(400, { error: "Candidates already locked" })
-        }
-
-        const top = await prisma.lunchNomination.groupBy({
-            by: ["restaurantId"],
-            where: { roundId: round.id },
-            _count: { restaurantId: true },
-            _min: { createdAt: true },
-            orderBy: [{ _count: { restaurantId: "desc" } }],
-            take: 3,
-        })
-
-        if (top.length === 0) {
-            return jsonResponse(400, { error: "No nominations yet" })
-        }
-
-        await prisma.$transaction(async (tx) => {
-            await tx.lunchCandidate.deleteMany({ where: { roundId: round.id } })
-
-            for (const row of top) {
-                await tx.lunchCandidate.create({
-                    data: {
-                        roundId: round.id,
-                        restaurantId: row.restaurantId,
-                        nominationCount: row._count.restaurantId,
-                    },
-                })
-            }
-
-            await tx.lunchRound.update({
-                where: { id: round.id },
-                data: {
-                    status: "voting",
-                    votingEndsAt: new Date(Date.now() + 15 * 60 * 1000),
-                },
-            })
-        })
-
-        return jsonResponse(200, { ok: true, candidateCount: top.length })
-    }
-
-    if (action === "vote") {
-        if (round.status !== "voting" && round.status !== "nominating") {
-            return jsonResponse(400, { error: "Voting is not open" })
-        }
-
-        if (!restaurantId) {
-            return jsonResponse(400, { error: "Restaurant required" })
-        }
-
-        const restaurant = await prisma.restaurant.findFirst({
-            where: { id: restaurantId, active: true },
-        })
-
-        if (!restaurant) {
-            return jsonResponse(400, {
-                error: "Can only vote for restaurants in the pool",
-            })
-        }
-
-        const existing = await prisma.lunchVote.findUnique({
+        const existingPick = await prisma.lunchNomination.findUnique({
             where: {
                 roundId_userId_restaurantId: {
-                    roundId: round.id,
-                    userId: auth.user.id,
+                    roundId,
+                    userId: user.id,
                     restaurantId,
                 },
             },
         })
 
-        if (existing) {
-            await prisma.lunchVote.delete({ where: { id: existing.id } })
-            return jsonResponse(200, { ok: true, selected: false })
+        if (existingPick) {
+            await prisma.lunchNomination.delete({ where: { id: existingPick.id } })
+            return jsonResponse(200, { ok: true, picked: false })
         }
 
-        const selectedCount = await prisma.lunchVote.count({
-            where: { roundId: round.id, userId: auth.user.id },
+        const pickCount = await prisma.lunchNomination.count({
+            where: { roundId, userId: user.id },
         })
-
-        if (selectedCount >= MAX_LUNCH_VOTES) {
+        if (pickCount >= PICKS_REQUIRED) {
             return jsonResponse(400, {
-                error: `You can vote for at most ${MAX_LUNCH_VOTES} options`,
+                error: `You already picked ${PICKS_REQUIRED} — unpick one to swap`,
             })
         }
 
-        await prisma.lunchVote.create({
+        const restaurant = await prisma.restaurant.findFirst({
+            where: { id: restaurantId, active: true },
+        })
+        if (!restaurant) {
+            return jsonResponse(400, { error: "Restaurant not in pool" })
+        }
+
+        await prisma.lunchNomination.create({
             data: {
-                roundId: round.id,
-                userId: auth.user.id,
+                roundId,
+                userId: user.id,
                 restaurantId,
             },
         })
 
-        return jsonResponse(200, { ok: true, selected: true })
+        const updatedRound = await getActiveRound()
+        if (updatedRound && (await shouldAutoClose(roundId, updatedRound.votingEndsAt))) {
+            await finalizeRound(roundId)
+        }
+
+        return jsonResponse(200, { ok: true, picked: true })
     }
 
     if (action === "close") {
-        const denied = requireAdmin(auth.user)
-        if (denied) return denied
-
-        if (round.status !== "voting" && round.status !== "nominating") {
-            return jsonResponse(400, { error: "Round must be open to close" })
+        if (!(await requireAdmin(user))) {
+            return jsonResponse(403, { error: "Admin required" })
         }
 
-        const roundVotes = await prisma.lunchVote.findMany({
-            where: { roundId: round.id },
-            select: { restaurantId: true, createdAt: true },
-        })
-
-        const winnerId = pickLunchWinner(
-            roundVotes.map((vote) => ({
-                restaurant_id: vote.restaurantId,
-                created_at: vote.createdAt.toISOString(),
-            }))
-        )
-
-        await prisma.lunchRound.update({
-            where: { id: round.id },
-            data: {
-                status: "closed",
-                winnerRestaurantId: winnerId,
-                closedAt: new Date(),
-            },
-        })
-
-        return jsonResponse(200, { ok: true, winnerRestaurantId: winnerId })
+        const result = await finalizeRound(roundId)
+        return jsonResponse(200, { ok: true, ...result })
     }
 
     return jsonResponse(400, { error: "Unknown action" })
 }
+
+export { methodNotAllowed as OPTIONS }

@@ -57,6 +57,10 @@ function buildDemoMenu(storeName: string, url: string): MenuPreviewItem[] {
     }))
 }
 
+export function menuStoreUrl(menu: MenuPreview | null | undefined): string {
+    return menu?.uberEatsUrl ?? ""
+}
+
 export function extractUberEatsMenuDemo(url: string): MenuPreview {
     const normalized = normalizeUberEatsUrl(url)
     const { slug } = parseUberEatsUrl(normalized)

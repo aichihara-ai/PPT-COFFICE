@@ -11,13 +11,28 @@ export type RoomBooking = {
     user_id: number
 }
 
+export type BookingRequest = {
+    id: number
+    booking_id: number
+    requester_id: number
+    requester_name: string
+    message: string | null
+    status: "pending" | "accepted" | "declined"
+    created_at: string
+}
+
 export type RoomStatus =
     | { room: RoomId; status: "busy"; until: string; title: string; bookedBy: string }
     | { room: RoomId; status: "free"; nextStart: string | null; nextTitle: string | null }
 
-export const ROOM_CONFIG: Record<RoomId, { label: string; emoji: string }> = {
-    room_a: { label: "Big", emoji: "🟦" },
-    room_b: { label: "Small", emoji: "🟩" },
+export const ROOM_CONFIG: Record<RoomId, { label: string; emoji: string; accent: "primary" | "warning" }> = {
+    room_a: { label: "Big", emoji: "🟦", accent: "primary" },
+    room_b: { label: "Small", emoji: "🟩", accent: "warning" },
+}
+
+export const ROOM_SWATCH_CLASS: Record<"primary" | "warning", string> = {
+    primary: "bg-primary",
+    warning: "bg-warning",
 }
 
 export const ROOM_LABELS: Record<RoomId, string> = {
