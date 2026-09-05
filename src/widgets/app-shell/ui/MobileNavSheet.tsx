@@ -54,7 +54,7 @@ export function MobileNavSheet() {
                                 aria-current={isActive ? "page" : undefined}
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground",
-                                    isActive ? "font-bold" : "font-normal"
+                                    isActive && "font-bold"
                                 )}
                             >
                                 <Icon className="size-4 shrink-0" aria-hidden />
