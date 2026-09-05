@@ -7,7 +7,7 @@ description: Drive the Office Hub Next.js web app the way a Vancouver teammate w
 
 Office Hub is the Vancouver internal office web app in this repo (`office-hub`). The primary user surface is the **browser UI**. There is no first-party CLI. Next.js Route Handlers live under `/api/*` and are a secondary surface for curl checks.
 
-Default verification uses the **Next.js production build in demo mode** (`npm run build` then `npm start` on port **3000**). Demo mode does **not** hit Neon. State lives in the browser `localStorage` key `office-hub-demo`. Protected routes skip login in demo mode. The header shows **Team** / **HR Admin** role toggles instead of **Sign out**.
+Default verification uses the **Next.js production build in demo mode** (`npm run build` then `npm start` on port **3000**). Demo mode does **not** hit Neon. State lives in the browser `localStorage` key `office-hub-demo`. Protected routes skip login in demo mode. **Team** / **HR Admin** role toggles and the dark-mode control live on **Settings** (`/settings`), not in the header.
 
 Set `NEXT_PUBLIC_USE_API=true` before launching the build to use API mode with cookie login and shared Neon Postgres. Do not treat that as an isolated sandbox. Never start a second API-mode instance against the same `DATABASE_URL` to parallelize verification.
 
@@ -50,8 +50,8 @@ Stable handles (prefer these over coordinates):
 | User control | Handle |
 | --- | --- |
 | App identity | Page title `Office Hub — Vancouver`; login card title `Office Hub` |
-| Nav | Sidebar items named `Dashboard`, `Meeting rooms`, `Kitchen snacks`, `Coffee & milk`, `Office lunch` (routes `/`, `/rooms`, `/kitchen`, `/inventory`, `/lunch`) |
-| Demo role | Buttons `Team` and `HR Admin` in the header (demo only) |
+| Nav | Sidebar / sheet items named `Dashboard`, `Meeting rooms`, `Kitchen snacks`, `Coffee & milk`, `Office lunch`, `Settings` (routes `/`, `/rooms`, `/kitchen`, `/inventory`, `/lunch`, `/settings`) |
+| Demo role | Buttons `Team` and `HR Admin` on Settings (demo only). Header has no dark-mode toggle. |
 | Sign in | Textboxes labelled `Name`, `Password`; buttons `Sign in`, `Register` (API mode only) |
 | Rooms | Buttons `Book a room`, `Book`; dialog title `Book a meeting room`; button `Book room`; list action `Cancel` |
 | Kitchen | Textboxes `Title (optional)` and `Product link`; button `Add link`; heading `Kitchen wishlist` |

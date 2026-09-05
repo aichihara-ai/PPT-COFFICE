@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 
-import { hourTickPercent, nowMarkerStyle } from "./room-schedule.ts"
+import { hourTickPercent, nowMarkerStyle, shiftLocalDate } from "./room-schedule.ts"
 
 describe("nowMarkerStyle axis", () => {
     it("places 9:21 on the same 8a–6p axis as the 9a and 10a ticks", () => {
@@ -33,5 +33,17 @@ describe("nowMarkerStyle axis", () => {
         assert.ok(style, "17:21 America/Vancouver is still Sep 5 locally")
         assert.equal(Number.parseFloat(style.left), 93.5)
         assert.equal(nowMarkerStyle("2026-09-06", fiveTwentyOnePmPt), null)
+    })
+})
+
+describe("shiftLocalDate", () => {
+    it("moves forward and back by whole local calendar days", () => {
+        assert.equal(shiftLocalDate("2026-09-05", 1), "2026-09-06")
+        assert.equal(shiftLocalDate("2026-09-05", -1), "2026-09-04")
+    })
+
+    it("crosses month boundaries using the local calendar, not UTC", () => {
+        assert.equal(shiftLocalDate("2026-09-01", -1), "2026-08-31")
+        assert.equal(shiftLocalDate("2026-08-31", 1), "2026-09-01")
     })
 })

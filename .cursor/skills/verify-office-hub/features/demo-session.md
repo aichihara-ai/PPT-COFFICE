@@ -1,6 +1,6 @@
 # Demo session and dashboard
 
-Demo session lets a user open Office Hub without login, see Vancouver office dashboard stats, and switch between Team and HR Admin in the header.
+Demo session lets a user open Office Hub without login, see Vancouver office dashboard stats, and switch between Team and HR Admin on Settings.
 
 ## Sub-features
 
@@ -12,16 +12,17 @@ Demo session lets a user open Office Hub without login, see Vancouver office das
 
 - Open `http://127.0.0.1:3000/`.
 - Choose `Dashboard` in the sidebar if another page is showing.
-- Choose `Team` or `HR Admin` in the header (demo mode only).
+- Open `Settings` from the sidebar or mobile sheet, then choose `Team` or `HR Admin` (demo mode only).
 
 ## Driving it with Chrome DevTools MCP
 
 Preconditions:
 
 - `control-office-hub doctor` reports healthy Office Hub on `http://127.0.0.1:3000`.
-- Next.js demo mode has `Team` and `HR Admin` in the header and no `Sign in` card.
+- Next.js demo mode has `Team` and `HR Admin` on Settings (`/settings`) and no `Sign in` card. The header has no dark-mode toggle.
 
 - **Open dashboard.** Navigate to `http://127.0.0.1:3000/`. Run `navigate_page` then `take_snapshot`. An `h1` named `Dashboard` is present. Sidebar includes `Meeting rooms` and `Office lunch`.
+- **Open settings.** Click sidebar or sheet `Settings`. Snapshot `h1` is `Settings`. Dark mode toggle is on this page. Header does not show a moon/sun toggle.
 - **Team role.** Click `Team`. Snapshot shows a badge `Team` or the demo user name `Team`, not `HR Admin` as the role badge.
 - **HR role.** Click `HR Admin`. Snapshot shows badge `HR Admin`. Dashboard lunch detail may mention starting a round.
 - **Proof.** Save snapshot to `artifacts/demo-session/dashboard.aria.txt` and screenshot to `artifacts/demo-session/dashboard.png`. Both show `Dashboard` and `Office Hub` chrome.

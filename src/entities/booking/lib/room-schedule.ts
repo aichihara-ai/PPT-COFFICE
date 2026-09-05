@@ -34,6 +34,12 @@ export function formatLocalDate(now: Date = new Date()) {
     return `${year}-${month}-${day}`
 }
 
+/** Shift a `YYYY-MM-DD` calendar date by whole local days (not UTC). */
+export function shiftLocalDate(date: string, days: number) {
+    const [year, month, day] = date.split("-").map(Number)
+    return formatLocalDate(new Date(year, month - 1, day + days))
+}
+
 export function minutesToSchedulePercent(minutes: number) {
     return ((minutes - SCHEDULE_DAY_START_MINUTES) / SCHEDULE_DAY_SPAN_MINUTES) * 100
 }
