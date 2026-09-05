@@ -7,7 +7,7 @@ This directory is the maintained source for verifying user-facing behavior of Of
 - App is at `http://127.0.0.1:3000` using the **Next.js production build** with `DATABASE_URL` pointing at the local Docker Postgres (`127.0.0.1:5433/office_hub`).
 - `docker compose -f docker-compose.dev.yml up -d` must be running before launch.
 - Run `.cursor/skills/verify-office-hub/bin/control-office-hub doctor` and require `verdict=healthy` and `identity=office-hub`.
-- Unauthenticated visits redirect to `/login`. Header shows **Sign out**, not Team/HR toggles.
+- Unauthenticated visits redirect to `/login`. Sign out is in the sidebar footer dropdown.
 - Prefer a fresh tab. Do not hijack a teammate's live session.
 - Never start a second server on port 3000. Never kill a process you did not launch via `control-office-hub`.
 

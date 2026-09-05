@@ -23,6 +23,8 @@ const STATUS_VARIANT: Record<SuggestionStatus, "default" | "secondary" | "destru
     declined: "destructive",
 }
 
+const ACTION_CLASS = "min-w-0 flex-1 sm:flex-none"
+
 export function KitchenSuggestionItem({
     id,
     text,
@@ -41,33 +43,30 @@ export function KitchenSuggestionItem({
     return (
         <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1 space-y-1">
-                {href ? (
-                    <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block truncate font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                        {label}
-                    </a>
-                ) : (
-                    <p className="truncate font-medium">{label}</p>
-                )}
+                <p className="truncate font-medium">{label}</p>
                 {showFallback ? (
                     <p className="truncate text-xs text-muted-foreground">{fallback}</p>
                 ) : null}
                 <p className="text-sm text-muted-foreground">{userName}</p>
             </div>
             <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-                <Badge variant={STATUS_VARIANT[status]} className="shrink-0">
-                    {status}
-                </Badge>
+                {href ? (
+                    <Button asChild size="sm" variant="default" className={ACTION_CLASS}>
+                        <a href={href} target="_blank" rel="noopener noreferrer">
+                            Open
+                        </a>
+                    </Button>
+                ) : (
+                    <Badge variant={STATUS_VARIANT[status]} className="shrink-0">
+                        {status}
+                    </Badge>
+                )}
                 {isAdmin && status === "open" ? (
                     <>
                         <Button
                             size="sm"
                             variant="secondary"
-                            className="min-w-0 flex-1 sm:flex-none"
+                            className={ACTION_CLASS}
                             onClick={() => onMarkBought?.(id)}
                         >
                             Bought
@@ -75,7 +74,7 @@ export function KitchenSuggestionItem({
                         <Button
                             size="sm"
                             variant="outline"
-                            className="min-w-0 flex-1 sm:flex-none"
+                            className={ACTION_CLASS}
                             onClick={() => onDecline?.(id)}
                         >
                             Decline

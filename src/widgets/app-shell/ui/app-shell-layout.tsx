@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation"
 
 import { createSidebarMenu } from "@/widgets/app-shell/model/create-sidebar-menu"
 import LayoutHeader from "@/widgets/app-shell/ui/LayoutHeader"
+import { SidebarAccountMenu } from "@/widgets/app-shell/ui/SidebarAccountMenu"
 import { useAuth } from "@/features/auth"
 import { SIDEBAR_CONFIG } from "@/shared/config"
 import { ReactRouterShim } from "@/shared/ui"
@@ -23,7 +24,7 @@ export function AppShellLayout({
     const pathname = usePathname()
     const router = useRouter()
     const push = navigate ?? router.push.bind(router)
-    const { user } = useAuth()
+    const { user, logout } = useAuth()
     const sidebarData = createSidebarMenu(pathname, activeThemeId, setTheme, push)
 
     const teamEntries = Object.values(SIDEBAR_CONFIG.HEADER.DROPDOWN.TEAMS)
@@ -47,7 +48,12 @@ export function AppShellLayout({
                         }}
                         shouldShowSidebarTrigger
                         headerDropdownTitle={SIDEBAR_CONFIG.HEADER.DROPDOWN.TITLE}
-                        hideFooterDropdown
+                        footer={{
+                            dropdownEnabled: true,
+                            dropdownContent: (
+                                <SidebarAccountMenu onSignOut={logout} />
+                            ),
+                        }}
                         defaultActiveTeamIndex={
                             activeTeamIndex >= 0 ? activeTeamIndex : 0
                         }

@@ -47,23 +47,27 @@ export async function POST(request: NextRequest) {
                     isAdmin: true,
                 },
             }),
-            ...LUNCH_RESTAURANT_SEEDS.map((seed) =>
-                prisma.restaurant.upsert({
-                    where: { name: seed.name },
-                    create: {
-                        name: seed.name,
-                        notes: seed.notes,
-                        uberEatsUrl: seed.uberEatsUrl,
-                        menuPreview: extractUberEatsMenuFromUrlOnly(seed.uberEatsUrl),
-                    },
-                    update: {
-                        notes: seed.notes,
-                        uberEatsUrl: seed.uberEatsUrl,
-                        active: true,
-                    },
-                })
-            ),
         ])
+
+        const seenUberEatsUrls = new Set<string>()
+        for (const seed of LUNCH_RESTAURANT_SEEDS) {
+            if (seenUberEatsUrls.has(seed.uberEatsUrl)) continue
+            seenUberEatsUrls.add(seed.uberEatsUrl)
+            await prisma.restaurant.upsert({
+                where: { name: seed.name },
+                create: {
+                    name: seed.name,
+                    notes: seed.notes,
+                    uberEatsUrl: seed.uberEatsUrl,
+                    menuPreview: extractUberEatsMenuFromUrlOnly(seed.uberEatsUrl),
+                },
+                update: {
+                    notes: seed.notes,
+                    uberEatsUrl: seed.uberEatsUrl,
+                    active: true,
+                },
+            })
+        }
 
         return jsonResponse(200, {
             ok: true,

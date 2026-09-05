@@ -1,6 +1,6 @@
 # API session and dashboard
 
-API session requires sign-in before any protected route. After login, the user sees the Vancouver office dashboard, their name or role badge in the header, and **Sign out**.
+API session requires sign-in before any protected route. After login, the user sees the Vancouver office dashboard. Sign out is in the sidebar footer account dropdown.
 
 ## Sub-features
 
@@ -13,7 +13,7 @@ API session requires sign-in before any protected route. After login, the user s
 - Open `http://127.0.0.1:3000/` (redirects to `/login` when signed out).
 - Enter `Name` and `Password`, then click `Sign in` (or `Register` for a new account).
 - Choose `Dashboard` in the sidebar if another page is showing.
-- Click `Sign out` in the header to end the session.
+- Open the sidebar footer account dropdown, then click `Sign out`.
 
 ## Driving it with Chrome DevTools MCP
 
@@ -23,8 +23,8 @@ Preconditions:
 - Valid credentials exist (admin from `/api/setup`, or a registered test user).
 
 - **Login wall.** Navigate to `http://127.0.0.1:3000/`. Run `navigate_page` then `take_snapshot`. Card title `Office Hub` with `Name` and `Password` fields is present. No sidebar yet.
-- **Sign in.** Fill credentials and click `Sign in`. Snapshot shows `h1` named `Dashboard`. Sidebar includes `Meeting rooms` and `Office lunch`. Header shows **Sign out** and a name/role badge (not Team/HR toggles).
-- **Sign out.** Click `Sign out`. Snapshot returns to the login card.
+- **Sign in.** Fill credentials and click `Sign in`. Snapshot shows `h1` named `Dashboard`. Sidebar includes `Meeting rooms` and `Office lunch`. The sidebar footer shows the signed-in name.
+- **Sign out.** Open the sidebar footer account dropdown and click `Sign out`. Snapshot returns to the login card.
 - **Proof.** Save snapshot to `artifacts/api-session/dashboard.aria.txt` and screenshot to `artifacts/api-session/dashboard.png`. Both show `Dashboard` and Office Hub chrome after login.
 
 ## Gotchas

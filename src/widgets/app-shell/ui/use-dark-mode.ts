@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
-import { THEME_PREFERENCE, THEME_STORAGE_KEY } from "@/shared/config"
-import { Button } from "@ppt/luminis"
-import { Moon, Sun } from "lucide-react"
+"use client"
 
-export function ThemeToggle() {
+import { useEffect, useState } from "react"
+
+import { THEME_PREFERENCE, THEME_STORAGE_KEY } from "@/shared/config"
+
+export function useDarkMode() {
     const [isDark, setIsDark] = useState(() => {
         if (typeof document === "undefined") return false
         const stored = localStorage.getItem(THEME_STORAGE_KEY)
@@ -43,14 +44,5 @@ export function ThemeToggle() {
         }
     }
 
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggle}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-            {isDark ? <Sun /> : <Moon />}
-        </Button>
-    )
+    return { isDark, toggle }
 }

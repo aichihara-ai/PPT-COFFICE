@@ -7,7 +7,7 @@ description: Drive the Office Hub Next.js web app the way a Vancouver teammate w
 
 Office Hub is the Vancouver internal office web app in this repo (`office-hub`). The primary user surface is the **browser UI**. There is no first-party CLI. Next.js Route Handlers live under `/api/*` and are a secondary surface for curl checks.
 
-Default verification uses the **Next.js production build** (`npm run build` then `npm start` on port **3000**) against the local Docker Postgres from `docker-compose.dev.yml` (`DATABASE_URL=postgresql://office:office@127.0.0.1:5433/office_hub`). Protected routes require login. The header shows the signed-in name or role badge and **Sign out** (no Team/HR toggle). Mutations persist in that database.
+Default verification uses the **Next.js production build** (`npm run build` then `npm start` on port **3000**) against the local Docker Postgres from `docker-compose.dev.yml` (`DATABASE_URL=postgresql://office:office@127.0.0.1:5433/office_hub`). Protected routes require login. Sign out lives in the sidebar footer account dropdown. Mutations persist in that database.
 
 Ensure `docker compose -f docker-compose.dev.yml up -d` is running before launch. Do not point verification at the production Neon endpoint. Local processes throw on that host unless `ALLOW_PRODUCTION_DATABASE=1`.
 
@@ -52,7 +52,8 @@ Stable handles (prefer these over coordinates):
 | App identity | Page title `Office Hub — Vancouver`; login card title `Office Hub` |
 | Nav | Sidebar items named `Dashboard`, `Meeting rooms`, `Kitchen snacks`, `Coffee & milk`, `Office lunch` (routes `/`, `/rooms`, `/kitchen`, `/inventory`, `/lunch`) |
 | Sign in | Textboxes labelled `Name`, `Password`; buttons `Sign in`, `Register` |
-| Sign out | Button `Sign out` in the header |
+| Sign out | Footer account dropdown in the sidebar, then `Sign out` |
+| Dark mode | Same footer dropdown (`Dark mode` / `Light mode`); mobile nav sheet on small viewports |
 | Rooms | Buttons `Book a room`, `Book`; dialog title `Book a meeting room`; button `Book room`; list action `Cancel` |
 | Kitchen | Textboxes `Title (optional)` and `Product link`; button `Add link`; heading `Kitchen wishlist` |
 | Inventory | Page title starts with `Coffee & milk`; buttons `☕ Running low`, `🥛 Running low`; HR `☕ Restocked` / `🥛 Restocked`; badges `Stocked` / `Running low` |
