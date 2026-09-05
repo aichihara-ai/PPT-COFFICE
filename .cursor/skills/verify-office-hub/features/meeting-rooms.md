@@ -20,7 +20,7 @@ Meeting rooms lets a user pick a date, book Big or Small for a time range, see t
 Preconditions:
 
 - Doctor is healthy.
-- Demo mode, role `Team`.
+- Signed in as a team user (not HR) unless the feature needs admin cancel.
 - No existing booking titled `verify-office-hub`.
 
 - **Open rooms.** Click sidebar `Meeting rooms`. Snapshot `h1` is `Meeting rooms`. Date field labelled `Date` is present.
@@ -36,4 +36,4 @@ Preconditions:
 - Overlapping times on the same room fail; pick a free window or another room (`🟩 Small`).
 - Room labels in UI are `Big` and `Small` (`room_a` / `room_b` in code). Do not look for "Maple" or "Cedar" in the current UI.
 - Dashboard also books rooms; proving only Dashboard does not cover the `/rooms` date picker entry.
-- Cancel is shown only for the current user's bookings (or HR). Stay on Team for the booking you created.
+- Cancel is shown only for the current user's bookings (or HR). Stay on the account that created the booking.
