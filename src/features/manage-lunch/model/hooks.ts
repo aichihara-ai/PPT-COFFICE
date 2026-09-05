@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import type { LunchPanelData } from "@/entities/lunch-round"
-import type { Restaurant } from "@/entities/restaurant"
+import type { AddRestaurantLinkInput, Restaurant } from "@/entities/restaurant"
 import { apiFetch } from "@/shared/api"
 
 const lunchKey = ["lunch"] as const
@@ -96,10 +96,10 @@ export function useAddRestaurantFromLink() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (uberEatsUrl: string) =>
+        mutationFn: ({ uberEatsUrl, title }: AddRestaurantLinkInput) =>
             apiFetch("/api/restaurants", {
                 method: "POST",
-                body: JSON.stringify({ uberEatsUrl }),
+                body: JSON.stringify({ uberEatsUrl, title }),
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: restaurantsKey })

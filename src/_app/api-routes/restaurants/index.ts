@@ -3,7 +3,11 @@ import "server-only"
 import type { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { normalizeUberEatsUrl } from "@/entities/restaurant"
+import {
+    normalizeUberEatsUrl,
+    resolveRestaurantName,
+    RESTAURANT_TITLE_MAX_LENGTH,
+} from "@/entities/restaurant"
 import { extractUberEatsMenu } from "@/shared/lib/index.server"
 import { prisma } from "@/shared/db/index.server"
 import {
@@ -13,7 +17,8 @@ import {
 } from "@/shared/auth/index.server"
 
 const createSchema = z.object({
-    name: z.string().optional(),
+    title: z.string().max(RESTAURANT_TITLE_MAX_LENGTH).optional(),
+    name: z.string().max(RESTAURANT_TITLE_MAX_LENGTH).optional(),
     notes: z.string().optional(),
     uberEatsUrl: z.string(),
 })
@@ -60,13 +65,11 @@ export async function POST(request: NextRequest) {
     }
 
     const menuPreview = await extractUberEatsMenu(uberEatsUrl)
-    const name = menuPreview.storeName?.trim() || parsed.data.name?.trim()
-
-    if (!name) {
-        return jsonResponse(400, {
-            error: "Could not read restaurant name from link",
-        })
-    }
+    const name = resolveRestaurantName({
+        title: parsed.data.title ?? parsed.data.name,
+        scrapedName: menuPreview.storeName,
+        uberEatsUrl,
+    })
 
     try {
         const created = await prisma.restaurant.create({

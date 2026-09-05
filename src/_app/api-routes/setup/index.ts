@@ -6,24 +6,6 @@ import type { NextRequest } from "next/server"
 import { prisma } from "@/shared/db/index.server"
 import { jsonResponse, methodNotAllowed } from "@/shared/auth/index.server"
 
-const RESTAURANTS = [
-    ["Japadog", "Classic Vancouver street food"],
-    ["Mezze", "Mediterranean bowls and wraps"],
-    ["Nuba", "Lebanese"],
-    ["Earls", "Reliable sit-down option"],
-    ["Cactus Club", "Good for groups"],
-    ["Honest Greens", "Salads and bowls"],
-    ["Tractor Foods", "Healthy bowls"],
-    ["Chipotle", "Quick Mexican"],
-    ["Poké Man", "Poke bowls"],
-    ["Banana Leaf", "Malaysian"],
-    ["Peaceful Restaurant", "Chinese"],
-    ["Jamjar", "Middle Eastern"],
-    ["Nando's", "Peri-peri chicken"],
-    ["Freshii", "Light meals"],
-    ["Burgers + Fries", "Comfort food"],
-] as const
-
 export async function POST(request: NextRequest) {
     const setupSecret = process.env.SETUP_SECRET
     if (!setupSecret || request.headers.get("x-setup-secret") !== setupSecret) {
@@ -51,13 +33,6 @@ export async function POST(request: NextRequest) {
                 create: { item: "milk", status: "ok" },
                 update: {},
             }),
-            ...RESTAURANTS.map(([name, notes]) =>
-                prisma.restaurant.upsert({
-                    where: { name },
-                    create: { name, notes },
-                    update: {},
-                })
-            ),
             prisma.user.upsert({
                 where: { name: adminName },
                 create: {

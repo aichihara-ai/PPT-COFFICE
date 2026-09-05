@@ -25,7 +25,7 @@ npx prisma migrate resolve --applied 0_init
 npm run db:migrate
 ```
 
-Fresh databases can run `npm run db:migrate` directly. After migration, `/api/setup` creates the inventory rows, restaurant pool, and admin account. The endpoint does not modify the schema.
+Fresh databases can run `npm run db:migrate` directly. After migration, `/api/setup` creates the inventory rows and admin account. The lunch restaurant pool starts empty — teammates add Uber Eats links themselves. The endpoint does not modify the schema.
 
 ## Local setup
 

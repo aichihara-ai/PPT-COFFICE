@@ -56,10 +56,10 @@ export function LunchPage() {
                                 onError: (e) => toast.error(e.message),
                             })
                         }
-                        onAddRestaurant={(uberEatsUrl) =>
-                            addRestaurantMutation.mutate(uberEatsUrl, {
+                        onAddRestaurant={(input) =>
+                            addRestaurantMutation.mutate(input, {
                                 onSuccess: () =>
-                                    toast.success("Restaurant added from Uber Eats link"),
+                                    toast.success("Restaurant added to pool"),
                                 onError: (e) => toast.error(e.message),
                             })
                         }

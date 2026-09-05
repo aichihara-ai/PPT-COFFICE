@@ -7,7 +7,7 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "test": "TZ=America/Vancouver node --experimental-strip-types --test src/entities/booking/lib/room-schedule.test.ts",
+        "test": "TZ=America/Vancouver node --experimental-strip-types --test src/entities/booking/lib/room-schedule.test.ts src/shared/lib/restaurant-title.test.ts",
         "lint": "eslint src app",
         "lint:fsd": "CHOKIDAR_USEPOLLING=1 steiger ./src",
         "db:generate": "prisma generate",

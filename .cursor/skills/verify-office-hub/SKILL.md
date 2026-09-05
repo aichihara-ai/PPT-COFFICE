@@ -56,7 +56,7 @@ Stable handles (prefer these over coordinates):
 | Rooms | Buttons `Book a room`, `Book`; dialog title `Book a meeting room`; button `Book room`; list action `Cancel` |
 | Kitchen | Textboxes `Title (optional)` and `Product link`; button `Add link`; heading `Kitchen wishlist` |
 | Inventory | Page title starts with `Coffee & milk`; buttons `☕ Running low`, `🥛 Running low`; HR `☕ Restocked` / `🥛 Restocked`; badges `Stocked` / `Running low` |
-| Lunch | Button `Start lunch round`; `Vote` / `Voted`; `Close round & announce winner` |
+| Lunch | Textboxes `Title (optional)` and `Uber Eats link`; button `Add to pool`; `Start lunch round`; `Vote` / `Voted`; `Close round & announce winner` |
 
 Do not prove behavior by writing `localStorage` or calling `demoApiFetch` from the console. Exercise the UI (or the real `/api/*` the UI uses).
 
