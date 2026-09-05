@@ -71,13 +71,15 @@ export function RoomsPage() {
             actions={
                 <>
                     <div className="w-full space-y-2 sm:w-auto">
-                        <Label htmlFor="booking-date">Date</Label>
-                        <div className="flex items-center gap-1">
+                        <Label htmlFor="booking-date" className="block text-center sm:text-left">
+                            Date
+                        </Label>
+                        <div className="flex items-center justify-center gap-4">
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
-                                className="size-9 shrink-0"
+                                className="size-8 shrink-0"
                                 aria-label="Previous day"
                                 onClick={() => setDate((current) => shiftLocalDate(current, -1))}
                             >
@@ -88,13 +90,13 @@ export function RoomsPage() {
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
-                                className="min-w-0 flex-1"
+                                className="w-auto min-w-0 text-center"
                             />
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
-                                className="size-9 shrink-0"
+                                className="size-8 shrink-0"
                                 aria-label="Next day"
                                 onClick={() => setDate((current) => shiftLocalDate(current, 1))}
                             >
@@ -204,6 +206,7 @@ export function RoomsPage() {
                     </div>
                     <DialogFooter>
                         <Button
+                            className="w-full sm:w-auto"
                             onClick={() =>
                                 bookMutation.mutate(
                                     {

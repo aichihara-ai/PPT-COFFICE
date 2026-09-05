@@ -25,7 +25,7 @@ export function RestaurantMenuPreview({
     return (
         <div className={compact ? "space-y-2" : "space-y-3"}>
             <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" className="h-8 shrink-0" asChild>
+                <Button size="sm" variant="outline" className="h-8 w-full shrink-0 sm:w-auto" asChild>
                     <a href={menu.uberEatsUrl} target="_blank" rel="noopener noreferrer">
                         Open menu
                         <ExternalLink className="size-3.5" />

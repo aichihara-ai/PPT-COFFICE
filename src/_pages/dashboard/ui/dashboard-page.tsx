@@ -205,25 +205,21 @@ export function DashboardPage() {
                         roomStatus={roomStatus}
                         onBookRoom={openBookDialog}
                     />
-                    <div className="flex flex-col items-start gap-2 sm:flex-row">
+                    <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         <Button
                             size="sm"
-                            className="w-auto"
+                            className="w-full sm:w-auto"
                             onClick={() => openBookDialog()}
                         >
                             Book a room
                         </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto justify-start px-0 sm:px-3"
-                            asChild
+                        <Link
+                            href="/rooms"
+                            className="inline-flex items-center gap-1 self-start text-sm font-medium text-foreground"
                         >
-                            <Link href="/rooms">
-                                Full view
-                                <ArrowRight className="size-4" />
-                            </Link>
-                        </Button>
+                            Full view
+                            <ArrowRight className="size-4" />
+                        </Link>
                     </div>
                 </CardContent>
             </Card>
@@ -239,17 +235,13 @@ export function DashboardPage() {
                                     : `${openSuggestions.length} open link${openSuggestions.length === 1 ? "" : "s"}`}
                             </CardDescription>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto justify-start self-start px-0 sm:px-3"
-                            asChild
+                        <Link
+                            href="/kitchen"
+                            className="inline-flex items-center gap-1 self-start text-sm font-medium text-foreground"
                         >
-                            <Link href="/kitchen">
-                                View all
-                                <ArrowRight className="size-4" />
-                            </Link>
-                        </Button>
+                            View all
+                            <ArrowRight className="size-4" />
+                        </Link>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <KitchenWishlistForm
@@ -310,17 +302,13 @@ export function DashboardPage() {
                             <CardTitle>Pantry status</CardTitle>
                             <CardDescription>Coffee and milk — low or stocked</CardDescription>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto justify-start self-start px-0 sm:px-3"
-                            asChild
+                        <Link
+                            href="/inventory"
+                            className="inline-flex items-center gap-1 self-start text-sm font-medium text-foreground"
                         >
-                            <Link href="/inventory">
-                                View all
-                                <ArrowRight className="size-4" />
-                            </Link>
-                        </Button>
+                            View all
+                            <ArrowRight className="size-4" />
+                        </Link>
                     </CardHeader>
                     <CardContent className="grid gap-3 sm:grid-cols-2">
                         {(["coffee", "milk"] as const).map((itemKey) => {
@@ -391,17 +379,13 @@ export function DashboardPage() {
                             <CardTitle>Lunch vote</CardTitle>
                             <CardDescription>Pick up to 3 · one winner</CardDescription>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto justify-start self-start px-0 sm:px-3"
-                            asChild
+                        <Link
+                            href="/lunch"
+                            className="inline-flex items-center gap-1 self-start text-sm font-medium text-foreground"
                         >
-                            <Link href="/lunch">
-                                View all
-                                <ArrowRight className="size-4" />
-                            </Link>
-                        </Button>
+                            View all
+                            <ArrowRight className="size-4" />
+                        </Link>
                     </CardHeader>
                     <CardContent>
                         <LunchVotePanel
@@ -510,6 +494,7 @@ export function DashboardPage() {
                     </div>
                     <DialogFooter>
                         <Button
+                            className="w-full sm:w-auto"
                             onClick={() =>
                                 bookMutation.mutate(
                                     {

@@ -67,7 +67,7 @@ export function KitchenSuggestionItem({
                         <Button
                             size="sm"
                             variant="secondary"
-                            className="min-w-0 flex-1 sm:flex-none"
+                            className="min-w-0 w-full flex-1 sm:w-auto sm:flex-none"
                             onClick={() => onMarkBought?.(id)}
                         >
                             Bought
@@ -75,7 +75,7 @@ export function KitchenSuggestionItem({
                         <Button
                             size="sm"
                             variant="outline"
-                            className="min-w-0 flex-1 sm:flex-none"
+                            className="min-w-0 w-full flex-1 sm:w-auto sm:flex-none"
                             onClick={() => onDecline?.(id)}
                         >
                             Decline

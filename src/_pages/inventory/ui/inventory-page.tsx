@@ -63,11 +63,11 @@ export function InventoryPage() {
                                         {new Date(item.updated_at).toLocaleString()}
                                     </p>
                                 ) : null}
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                                     {status === "ok" ? (
                                         <Button
                                             variant="outline"
-                                            className="h-auto min-h-9 whitespace-normal px-3 py-2 text-sm leading-snug"
+                                            className="h-auto min-h-9 w-full whitespace-normal px-3 py-2 text-sm leading-snug sm:w-auto"
                                             onClick={() =>
                                                 updateMutation.mutate(
                                                     { item: itemKey, status: "low" },
@@ -86,7 +86,7 @@ export function InventoryPage() {
                                         </Button>
                                     ) : user.isAdmin ? (
                                         <Button
-                                            className="h-auto min-h-9 whitespace-normal px-3 py-2 text-sm leading-snug"
+                                            className="h-auto min-h-9 w-full whitespace-normal px-3 py-2 text-sm leading-snug sm:w-auto"
                                             onClick={() =>
                                                 updateMutation.mutate(
                                                     { item: itemKey, status: "ok" },

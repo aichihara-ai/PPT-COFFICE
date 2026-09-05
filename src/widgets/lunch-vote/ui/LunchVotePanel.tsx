@@ -140,6 +140,7 @@ export function LunchVotePanel({
                             onClick={onStart}
                             disabled={startPending}
                             size={compact ? "sm" : "default"}
+                            className="w-full sm:w-auto"
                         >
                             Start lunch round
                         </Button>
@@ -208,12 +209,12 @@ export function LunchVotePanel({
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="flex shrink-0 flex-wrap gap-1">
+                                        <div className="flex w-full shrink-0 flex-col gap-1 sm:w-auto sm:flex-row sm:flex-wrap">
                                             {menu ? (
                                                 <Button
                                                     size="sm"
                                                     variant="ghost"
-                                                    className="h-8 px-2"
+                                                    className="h-8 w-full px-2 sm:w-auto"
                                                     onClick={() => toggleMenu(restaurant.id)}
                                                 >
                                                     {menuOpen ? "Hide menu" : "Menu"}
@@ -222,7 +223,7 @@ export function LunchVotePanel({
                                             <Button
                                                 size="sm"
                                                 variant={isMine ? "default" : "outline"}
-                                                className="h-8"
+                                                className="h-8 w-full sm:w-auto"
                                                 onClick={() => onVote(restaurant.id)}
                                                 disabled={
                                                     votePending || countdown.isExpired || (!isMine && atCap)
@@ -246,6 +247,7 @@ export function LunchVotePanel({
                         <Button
                             size="sm"
                             variant="destructive"
+                            className="w-full sm:w-auto"
                             onClick={onClose}
                             disabled={closePending}
                         >

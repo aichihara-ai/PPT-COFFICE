@@ -34,12 +34,15 @@ export function MobileNavSheet() {
                     <Menu />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 max-w-[85vw]">
-                <SheetHeader>
+            <SheetContent
+                side="left"
+                className="w-80 max-w-[85vw] [&>button]:top-4 [&>button]:right-4 [&>button]:p-2"
+            >
+                <SheetHeader className="pr-12">
                     <SheetTitle>Office Hub</SheetTitle>
                     <SheetDescription>Go to a page</SheetDescription>
                 </SheetHeader>
-                <nav aria-label="Office pages" className="flex flex-col gap-0.5 px-4 pb-4">
+                <nav aria-label="Office pages" className="flex flex-col gap-1 px-4 pb-4">
                     {Object.values(routeMeta).map((route) => {
                         const Icon = route.icon
                         const isActive = pathname === route.path
@@ -50,7 +53,7 @@ export function MobileNavSheet() {
                                 onClick={() => setOpen(false)}
                                 aria-current={isActive ? "page" : undefined}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2 text-sm text-foreground",
+                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground",
                                     isActive ? "font-bold" : "font-normal"
                                 )}
                             >

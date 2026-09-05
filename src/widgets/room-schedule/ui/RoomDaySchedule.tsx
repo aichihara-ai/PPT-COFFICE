@@ -84,8 +84,8 @@ export function RoomDaySchedule({
     return (
         <div className={showAgenda ? "space-y-4" : "space-y-0"}>
             <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-0.5">
+                <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center justify-center gap-4">
                         {onDateChange ? (
                             <Button
                                 type="button"
@@ -98,7 +98,7 @@ export function RoomDaySchedule({
                                 <ChevronLeft />
                             </Button>
                         ) : null}
-                        <p className="text-sm font-medium text-foreground">
+                        <p className="text-center text-sm font-medium text-foreground">
                             {formatScheduleDate(date)}
                         </p>
                         {onDateChange ? (
@@ -115,7 +115,7 @@ export function RoomDaySchedule({
                         ) : null}
                     </div>
                     {canBook ? (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-center text-xs text-muted-foreground">
                             Drag on a room row to pick a time (Outlook-style)
                         </p>
                     ) : null}
@@ -205,7 +205,7 @@ export function RoomDaySchedule({
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="shrink-0 self-center"
+                                            className="w-full shrink-0 self-center sm:w-auto"
                                             onClick={() => onBookRoom?.(roomId)}
                                         >
                                             Book

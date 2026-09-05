@@ -52,6 +52,7 @@ export function SettingsPage() {
                             type="button"
                             size="sm"
                             variant="outline"
+                            className="w-full sm:w-auto"
                             onClick={() => void logout()}
                         >
                             Sign out
