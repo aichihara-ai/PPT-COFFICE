@@ -1,14 +1,11 @@
 import "server-only"
 
 import type { NextRequest } from "next/server"
-import { z } from "zod"
 
 import { prisma } from "@/shared/db/index.server"
 import { jsonResponse, methodNotAllowed, requireAdmin, requireUser } from "@/shared/auth/index.server"
-import { resolveLunchWinners } from "@/shared/lib/lunch-round"
 
 const PICKS_REQUIRED = 3
-const DEFAULT_DEADLINE_MINUTES = 30
 const DUAL_WINNER_THRESHOLD = 0.4
 
 function normalizeGroupOrderUrl(value: unknown) {
@@ -73,7 +70,7 @@ async function getParticipation(roundId: number) {
     }
 }
 
-async function shouldAutoClose(roundId: number, votingEndsAt: Date | null) {
+async function shouldAutoClose(_roundId: number, votingEndsAt: Date | null) {
     return votingEndsAt != null && new Date() >= votingEndsAt
 }
 

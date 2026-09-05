@@ -164,8 +164,8 @@ export function RoomDaySchedule({
                                                     ) : live.nextStart ? (
                                                         <p className="text-xs text-muted-foreground">
                                                             Next {live.nextStart}
-                                                            {live.nextBookedBy
-                                                                ? ` · ${live.nextBookedBy}`
+                                                            {live.nextTitle
+                                                                ? ` · ${live.nextTitle}`
                                                                 : ""}
                                                         </p>
                                                     ) : null}

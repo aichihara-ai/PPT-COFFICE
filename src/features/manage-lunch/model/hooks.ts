@@ -45,7 +45,7 @@ export function usePickLunch() {
 
     return useMutation({
         mutationFn: (restaurantId: number) =>
-            apiFetch("/api/lunch", {
+            apiFetch<{ picked: boolean }>("/api/lunch", {
                 method: "POST",
                 body: JSON.stringify({ action: "pick", restaurantId }),
             }),
@@ -58,7 +58,10 @@ export function useCloseLunchRound() {
 
     return useMutation({
         mutationFn: () =>
-            apiFetch("/api/lunch", {
+            apiFetch<{
+                winnerName: string | null
+                secondWinnerName: string | null
+            }>("/api/lunch", {
                 method: "POST",
                 body: JSON.stringify({ action: "close" }),
             }),

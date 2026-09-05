@@ -4,6 +4,7 @@ export {
     ROOM_SWATCH_CLASS,
     formatTimeValue,
     timesOverlap,
+    type BookingRequest,
     type RoomBooking,
     type RoomId,
     type RoomStatus,

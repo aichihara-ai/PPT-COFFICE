@@ -17,6 +17,7 @@ import {
 } from "@/shared/lib/lunch-round"
 import type { MenuPreview } from "@/shared/lib/uber-eats-menu"
 import { restaurantThumbnailUrl } from "@/shared/config/restaurant-images"
+import type { AddRestaurantLinkInput } from "@/entities/restaurant"
 import type { LunchPanelData } from "@/entities/lunch-round"
 import type { User } from "@/entities/user"
 import { cn } from "@/shared/lib/utils"
@@ -41,7 +42,7 @@ type LunchVotePanelProps = {
     onStart: (votingEndsAt: string) => void
     onPick: (restaurantId: number) => void
     onClose: () => void
-    onAddRestaurant: (uberEatsUrl: string) => void
+    onAddRestaurant: (input: AddRestaurantLinkInput) => void
     onSetGroupOrderLink?: (url: string) => void
     startPending?: boolean
     pickPending?: boolean
@@ -96,6 +97,7 @@ export function LunchVotePanel({
     groupOrderPending = false,
 }: LunchVotePanelProps) {
     const [uberEatsLink, setUberEatsLink] = useState("")
+    const [uberEatsTitle, setUberEatsTitle] = useState("")
     const [deadline, setDeadline] = useState(defaultDeadlineDate)
     const [deadlineError, setDeadlineError] = useState<string | null>(null)
 
@@ -341,12 +343,19 @@ export function LunchVotePanel({
                 <AddRestaurantLinkForm
                     value={uberEatsLink}
                     onChange={setUberEatsLink}
+                    title={uberEatsTitle}
+                    onTitleChange={setUberEatsTitle}
                     onSubmit={() => {
-                        onAddRestaurant(uberEatsLink.trim())
+                        onAddRestaurant({
+                            uberEatsUrl: uberEatsLink.trim(),
+                            title: uberEatsTitle,
+                        })
                         setUberEatsLink("")
+                        setUberEatsTitle("")
                     }}
                     isPending={addRestaurantPending}
                     inputId={compact ? "dash-lunch-uber-eats" : "lunch-uber-eats"}
+                    compact={compact}
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
                     {restaurants.length} spot{restaurants.length === 1 ? "" : "s"} in pool
