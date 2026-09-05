@@ -6,18 +6,14 @@ import { useEffect } from "react"
 import { useAuth } from "@/features/auth"
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
-    const { user, isLoading, isApiMode } = useAuth()
+    const { user, isLoading } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
 
     useEffect(() => {
-        if (!isApiMode || isLoading || user) return
+        if (isLoading || user) return
         router.replace(`/login?from=${encodeURIComponent(pathname)}`)
-    }, [isApiMode, isLoading, user, router, pathname])
-
-    if (!isApiMode) {
-        return children
-    }
+    }, [isLoading, user, router, pathname])
 
     if (isLoading) {
         return (

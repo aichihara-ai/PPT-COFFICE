@@ -18,10 +18,3 @@ export const SIDEBAR_CONFIG = {
         },
     },
 } as const
-
-const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV
-
-export const isApiMode =
-    process.env.NEXT_PUBLIC_USE_API === "true" ||
-    vercelEnv === "production" ||
-    vercelEnv === "preview"

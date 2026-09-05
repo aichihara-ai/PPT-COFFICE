@@ -50,7 +50,6 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
    SETUP_SECRET=one-time-setup-secret
    ADMIN_NAME=HR Admin
    ADMIN_PASSWORD=replace-before-deploying
-   NEXT_PUBLIC_USE_API=true
    ```
 
 3. **Initialize database**
@@ -74,14 +73,14 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
    npm run dev
    ```
 
-   Demo mode is the default. Set `NEXT_PUBLIC_USE_API=true` in `.env.local` to use the API and database.
+   Sign in with the admin account from `/api/setup`, or register a new user.
 
 ## Deploy to Vercel
 
 1. Push this repo to **private GitHub**
 2. Import project in Vercel
 3. Add Neon via Vercel Marketplace (sets `DATABASE_URL`)
-4. Set env vars: `JWT_SECRET`, `SETUP_SECRET`, `ADMIN_NAME`, `ADMIN_PASSWORD`, `NEXT_PUBLIC_USE_API=true`
+4. Set env vars: `JWT_SECRET`, `SETUP_SECRET`, `ADMIN_NAME`, `ADMIN_PASSWORD`
 5. On an existing Neon database, baseline once: `npx prisma migrate resolve --applied 0_init`
 6. Run `npm run db:migrate` against the production database
 7. Deploy. Hit `/api/setup` only if you need to seed or reset the admin password
@@ -95,4 +94,4 @@ The seeded admin account (`ADMIN_NAME` / `ADMIN_PASSWORD`) can:
 - Close lunch rounds and announce winners
 - Cancel any meeting room booking
 
-Regular users register once and stay logged in via an httpOnly `office-hub-token` cookie (API mode).
+Regular users register once and stay logged in via an httpOnly `office-hub-token` cookie.

@@ -1,6 +1,3 @@
-import { demoApiFetch } from "@/shared/lib/demo-store"
-import { isApiMode } from "@/shared/config"
-
 export class ApiError extends Error {
     status: number
 
@@ -14,17 +11,6 @@ export async function apiFetch<T>(
     path: string,
     options: RequestInit = {}
 ): Promise<T> {
-    if (!isApiMode) {
-        try {
-            return demoApiFetch<T>(path, options)
-        } catch (error) {
-            throw new ApiError(
-                400,
-                error instanceof Error ? error.message : "Request failed"
-            )
-        }
-    }
-
     const headers = new Headers(options.headers)
     if (!headers.has("Content-Type") && options.body) {
         headers.set("Content-Type", "application/json")
@@ -43,5 +29,3 @@ export async function apiFetch<T>(
 
     return data
 }
-
-export { isApiMode }

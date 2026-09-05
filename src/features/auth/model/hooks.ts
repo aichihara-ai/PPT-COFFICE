@@ -5,13 +5,12 @@ import type { User } from "@/entities/user"
 
 const sessionKey = ["auth", "session"] as const
 
-export function useSession(skip: boolean) {
+export function useSession() {
     return useQuery({
         queryKey: sessionKey,
         queryFn: () => apiFetch<{ user: User }>("/api/auth/me"),
-        enabled: !skip,
         retry: false,
-        select: (data) => data.user,
+        select: (data) => data?.user ?? null,
     })
 }
 

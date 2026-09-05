@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
@@ -21,7 +20,7 @@ import {
 } from "@ppt/luminis"
 
 export function LoginPage() {
-    const { user, isApiMode, login, register } = useAuth()
+    const { user, login, register } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
     const [name, setName] = useState("")
@@ -114,11 +113,6 @@ export function LoginPage() {
                             Register
                         </Button>
                     </div>
-                    {!isApiMode ? (
-                        <Button variant="link" asChild className="px-0">
-                            <Link href="/">Continue in demo mode</Link>
-                        </Button>
-                    ) : null}
                 </CardContent>
             </Card>
         </div>
