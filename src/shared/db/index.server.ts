@@ -1,20 +1,24 @@
 import "server-only"
 
 import { PrismaNeon } from "@prisma/adapter-neon"
+import { PrismaPg } from "@prisma/adapter-pg"
 
 import { PrismaClient } from "../../../generated/prisma/client"
+
+import { resolveDatabaseTarget } from "./database-target"
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
 }
 
 function createPrismaClient() {
-    const connectionString = process.env.DATABASE_URL
-    if (!connectionString) {
-        throw new Error("DATABASE_URL is not set")
-    }
+    const target = resolveDatabaseTarget(process.env)
 
-    const adapter = new PrismaNeon({ connectionString })
+    const adapter =
+        target.kind === "local-tcp"
+            ? new PrismaPg({ connectionString: target.connectionString })
+            : new PrismaNeon({ connectionString: target.connectionString })
+
     return new PrismaClient({ adapter })
 }
 

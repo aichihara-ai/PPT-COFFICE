@@ -13,7 +13,7 @@ Internal office tools for the Vancouver team. Built with `@ppt/luminis`, deploye
 
 - Next.js 16 App Router + React + TypeScript + Tailwind v4
 - `@ppt/luminis` vendored in `vendor/luminis` (no private npm feed required for deploy)
-- Prisma 7 + Neon Postgres (`@prisma/adapter-neon`)
+- Prisma 7 + Postgres (`@prisma/adapter-pg` locally, `@prisma/adapter-neon` on Vercel)
 - Feature-Sliced Design under `src/`
 
 ## Database migrations (baseline)
@@ -42,19 +42,31 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
    npm run sync:luminis
    ```
 
-2. **Environment** — copy `.env.example` to `.env.local`:
+2. **Start local Postgres**
+
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+
+   Or run compose, wait for readiness, and migrate in one step:
+
+   ```bash
+   npm run db:local:init
+   ```
+
+3. **Environment.** Copy `.env.example` to `.env.local`.
 
    ```
-   DATABASE_URL=postgresql://...
+   DATABASE_URL=postgresql://office:office@127.0.0.1:5433/office_hub
    JWT_SECRET=your-long-random-secret
    SETUP_SECRET=one-time-setup-secret
    ADMIN_NAME=HR Admin
    ADMIN_PASSWORD=replace-before-deploying
    ```
 
-3. **Initialize database**
+   Use `npm run env:pull` to fetch Vercel env into `.env.vercel`. Next and Prisma do not load that file. Do not run bare `vercel env pull`. That overwrites `.env.local` with the production Neon URL, and the next local boot throws instead of connecting to production.
 
-   Apply the Prisma migrations first:
+4. **Initialize database** (skip if you already ran `npm run db:local:init`)
 
    ```bash
    npm run db:migrate
@@ -67,7 +79,7 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
      -H "x-setup-secret: your-setup-secret"
    ```
 
-4. **Run**
+5. **Run**
 
    ```bash
    npm run dev
