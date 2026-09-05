@@ -17,6 +17,8 @@ export {
     bookingBlockStyle,
     bookingsForRoom,
     formatBookingTime,
+    formatLocalDate,
+    hourTickPercent,
     minuteOverlapsBooking,
     minutesFromPointerX,
     minutesToTimeString,

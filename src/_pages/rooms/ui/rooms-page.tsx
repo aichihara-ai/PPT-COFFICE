@@ -9,7 +9,7 @@ import {
     useCreateBooking,
     useDeleteBooking,
 } from "@/features/manage-bookings"
-import { ROOM_CONFIG, type RoomId } from "@/entities/booking"
+import { formatLocalDate, ROOM_CONFIG, type RoomId } from "@/entities/booking"
 import { PageShell } from "@/widgets/app-shell"
 import { RoomDaySchedule, type RoomBookRange } from "@/widgets/room-schedule"
 import { BOOKING_TIME_SLOTS } from "@/entities/booking"
@@ -36,7 +36,7 @@ import {
 
 export function RoomsPage() {
     const { user } = useAuth()
-    const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+    const [date, setDate] = useState(() => formatLocalDate())
     const [dialogOpen, setDialogOpen] = useState(false)
     const [room, setRoom] = useState<RoomId>("room_a")
     const [startTime, setStartTime] = useState("10:00")
@@ -47,7 +47,7 @@ export function RoomsPage() {
     const bookMutation = useCreateBooking(date)
     const deleteMutation = useDeleteBooking(date)
 
-    const today = new Date().toISOString().slice(0, 10)
+    const today = formatLocalDate()
     const roomStatus = data?.roomStatus ?? []
     const bookings = data?.bookings ?? []
 

@@ -42,8 +42,9 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "vendor"
-  ]
+    "exclude": [
+        "node_modules",
+        "vendor",
+        "src/**/*.test.ts"
+    ]
 }

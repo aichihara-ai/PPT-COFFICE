@@ -26,7 +26,7 @@ import {
     useStartLunchRound,
     useVoteLunch,
 } from "@/features/manage-lunch"
-import { ROOM_CONFIG, type RoomId } from "@/entities/booking"
+import { formatLocalDate, ROOM_CONFIG, type RoomId } from "@/entities/booking"
 import { INVENTORY_ITEM_CONFIG } from "@/entities/inventory"
 import { DashboardStatCard, PageShell } from "@/widgets/app-shell"
 import { KitchenSuggestionItem, KitchenWishlistForm } from "@/widgets/kitchen-wishlist"
@@ -69,7 +69,7 @@ const STATUS_BADGE: Record<InventoryStatus, "secondary" | "destructive"> = {
 
 export function DashboardPage() {
     const user = useRequiredUser()
-    const today = new Date().toISOString().slice(0, 10)
+    const today = formatLocalDate()
 
     const [bookDialogOpen, setBookDialogOpen] = useState(false)
     const [bookRoom, setBookRoom] = useState<RoomId>("room_a")

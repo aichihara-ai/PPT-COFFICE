@@ -27,6 +27,21 @@ export function bookingsForRoom(bookings: RoomBooking[], room: RoomId) {
     return sortBookings(bookings.filter((booking) => booking.room === room))
 }
 
+export function formatLocalDate(now: Date = new Date()) {
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    const day = String(now.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+}
+
+export function minutesToSchedulePercent(minutes: number) {
+    return ((minutes - SCHEDULE_DAY_START_MINUTES) / SCHEDULE_DAY_SPAN_MINUTES) * 100
+}
+
+export function hourTickPercent(hour: number) {
+    return minutesToSchedulePercent(hour * 60)
+}
+
 export function bookingBlockStyle(booking: RoomBooking) {
     const start = parseTimeToMinutes(booking.start_time)
     const end = parseTimeToMinutes(booking.end_time)
@@ -37,8 +52,7 @@ export function bookingBlockStyle(booking: RoomBooking) {
         return { left: "0%", width: "0%" }
     }
 
-    const left =
-        ((clampedStart - SCHEDULE_DAY_START_MINUTES) / SCHEDULE_DAY_SPAN_MINUTES) * 100
+    const left = minutesToSchedulePercent(clampedStart)
     const width =
         ((clampedEnd - clampedStart) / SCHEDULE_DAY_SPAN_MINUTES) * 100
 
@@ -48,11 +62,9 @@ export function bookingBlockStyle(booking: RoomBooking) {
     }
 }
 
-export function nowMarkerStyle(date: string) {
-    const today = new Date().toISOString().slice(0, 10)
-    if (date !== today) return null
+export function nowMarkerStyle(date: string, now: Date = new Date()) {
+    if (date !== formatLocalDate(now)) return null
 
-    const now = new Date()
     const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
     if (
@@ -62,10 +74,7 @@ export function nowMarkerStyle(date: string) {
         return null
     }
 
-    const left =
-        ((nowMinutes - SCHEDULE_DAY_START_MINUTES) / SCHEDULE_DAY_SPAN_MINUTES) * 100
-
-    return { left: `${left}%` }
+    return { left: `${minutesToSchedulePercent(nowMinutes)}%` }
 }
 
 export const SCHEDULE_HOUR_LABELS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
@@ -119,8 +128,7 @@ export function selectionBlockStyle(startMinutes: number, endMinutes: number) {
         }
     }
 
-    const left =
-        ((clampedStart - SCHEDULE_DAY_START_MINUTES) / SCHEDULE_DAY_SPAN_MINUTES) * 100
+    const left = minutesToSchedulePercent(clampedStart)
     const width =
         ((clampedEnd - clampedStart) / SCHEDULE_DAY_SPAN_MINUTES) * 100
 

@@ -115,6 +115,7 @@ export function RoomTimelineTrack({
         >
             {nowMarkerLeft ? (
                 <div
+                    data-now-marker
                     className="pointer-events-none absolute inset-y-1 z-10 w-0.5 bg-destructive"
                     style={{ left: nowMarkerLeft }}
                     aria-hidden
