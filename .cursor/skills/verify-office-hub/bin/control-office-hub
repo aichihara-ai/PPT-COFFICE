@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# Verification harness for Office Hub (Next.js demo surface on 3000).
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+RUN_DIR="$SKILL_DIR/.run"
+PID_FILE="$RUN_DIR/next.pid"
+LOG_FILE="$RUN_DIR/next.log"
+URL="http://127.0.0.1:3000"
+TITLE_NEEDLE="Office Hub — Vancouver"
+
+usage() {
+  cat <<'EOF'
+Usage: control-office-hub <launch|doctor|status|cleanup>
+
+  launch   Build and start Next.js for this checkout if we do not already own 3000.
+  doctor   Read-only: is 3000 serving Office Hub?
+  status   Same as doctor; exit 0 only when healthy.
+  cleanup  Stop only the Next.js process this script started. Does not delete artifacts/.
+EOF
+}
+
+ensure_run_dir() {
+  mkdir -p "$RUN_DIR"
+}
+
+html_is_office_hub() {
+  local body
+  body="$(curl -fsS --max-time 3 "$URL/" 2>/dev/null || true)"
+  [[ "$body" == *"$TITLE_NEEDLE"* ]]
+}
+
+port_in_use() {
+  curl -fsS --max-time 1 -o /dev/null "$URL/" 2>/dev/null
+}
+
+our_pid_alive() {
+  [[ -f "$PID_FILE" ]] || return 1
+  local pid
+  pid="$(cat "$PID_FILE")"
+  [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
+}
+
+cmd_doctor() {
+  echo "root=$ROOT"
+  echo "url=$URL"
+  echo "title_needle=$TITLE_NEEDLE"
+
+  if ! port_in_use; then
+    echo "port=down"
+    echo "verdict=unhealthy: nothing answering on 3000"
+    return 1
+  fi
+  echo "port=up"
+
+  if ! html_is_office_hub; then
+    echo "identity=unknown"
+    echo "verdict=unhealthy: 3000 is up but HTML does not contain $TITLE_NEEDLE"
+    return 1
+  fi
+  echo "identity=office-hub"
+
+  if our_pid_alive; then
+    echo "owner=this-run pid=$(cat "$PID_FILE")"
+  elif [[ -f "$PID_FILE" ]]; then
+    echo "owner=stale-pid-file pid=$(cat "$PID_FILE")"
+  else
+    echo "owner=foreign-or-preexisting"
+  fi
+
+  echo "verdict=healthy"
+  return 0
+}
+
+cmd_launch() {
+  ensure_run_dir
+  if our_pid_alive && html_is_office_hub; then
+    echo "already launched pid=$(cat "$PID_FILE") $URL"
+    return 0
+  fi
+
+  if port_in_use; then
+    if html_is_office_hub; then
+      echo "refusing to start a second Next.js server: $URL already serves Office Hub (no PID we own)."
+      echo "Drive that instance, or stop it yourself."
+      return 1
+    fi
+    echo "refusing to start: $URL is occupied by something that is not Office Hub."
+    return 1
+  fi
+
+  if [[ ! -d "$ROOT/node_modules" ]]; then
+    echo "installing npm dependencies in $ROOT"
+    (cd "$ROOT" && npm install)
+  fi
+
+  : >"$LOG_FILE"
+  cd "$ROOT"
+  if ! npm run build >>"$LOG_FILE" 2>&1; then
+    echo "build failed; last log lines:"
+    tail -n 40 "$LOG_FILE" || true
+    return 1
+  fi
+  nohup npm start >>"$LOG_FILE" 2>&1 < /dev/null &
+  echo $! >"$PID_FILE"
+
+  local i
+  for i in $(seq 1 40); do
+    if html_is_office_hub; then
+      echo "launched pid=$(cat "$PID_FILE") $URL"
+      return 0
+    fi
+    sleep 0.25
+  done
+
+  echo "launch failed; last log lines:"
+  tail -n 40 "$LOG_FILE" || true
+  cmd_cleanup || true
+  return 1
+}
+
+cmd_cleanup() {
+  if ! [[ -f "$PID_FILE" ]]; then
+    echo "nothing to stop (no PID file). Leaving any foreign 3000 process alone."
+    return 0
+  fi
+  local pid
+  pid="$(cat "$PID_FILE")"
+  if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+    pkill -P "$pid" 2>/dev/null || true
+    kill "$pid" 2>/dev/null || true
+    local i
+    for i in $(seq 1 20); do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 0.2
+    done
+    if kill -0 "$pid" 2>/dev/null; then
+      pkill -9 -P "$pid" 2>/dev/null || true
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+    echo "stopped pid=$pid"
+  else
+    echo "pid $pid already gone"
+  fi
+  rm -f "$PID_FILE"
+  echo "artifacts left in $SKILL_DIR/artifacts"
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  launch) cmd_launch ;;
+  doctor|status) cmd_doctor ;;
+  cleanup) cmd_cleanup ;;
+  -h|--help|help|"") usage; exit 2 ;;
+  *) echo "unknown command: $cmd"; usage; exit 2 ;;
+esac

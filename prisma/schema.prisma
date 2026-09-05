@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  passwordHash String   @map("password_hash")
+  isAdmin      Boolean  @default(false) @map("is_admin")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bookings          Booking[]
+  suggestions       Suggestion[]
+  inventoryUpdates  Inventory[]       @relation("InventoryUpdatedBy")
+  lunchRounds       LunchRound[]
+  lunchNominations  LunchNomination[]
+  lunchVotes        LunchVote[]
+
+  @@map("users")
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  room        String
+  userId      Int      @map("user_id")
+  bookingDate DateTime @map("booking_date") @db.Date
+  startTime   DateTime @map("start_time") @db.Time(6)
+  endTime     DateTime @map("end_time") @db.Time(6)
+  title       String   @default("Meeting")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([room, bookingDate], map: "idx_bookings_room_date")
+  @@map("bookings")
+}
+
+model Suggestion {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  text      String
+  status    String   @default("open")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("suggestions")
+}
+
+model Inventory {
+  item      String   @id
+  status    String   @default("ok")
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  updatedByUser User? @relation("InventoryUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@map("inventory")
+}
+
+model Restaurant {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  notes        String?
+  uberEatsUrl  String?  @unique @map("uber_eats_url")
+  menuPreview  Json?    @map("menu_preview")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  lunchRoundsWon     LunchRound[]      @relation("LunchRoundWinner")
+  lunchNominations   LunchNomination[]
+  lunchCandidates    LunchCandidate[]
+  lunchVotes         LunchVote[]
+
+  @@map("restaurants")
+}
+
+model LunchRound {
+  id                 Int       @id @default(autoincrement())
+  status             String    @default("nominating")
+  createdBy          Int       @map("created_by")
+  winnerRestaurantId Int?      @map("winner_restaurant_id")
+  votingEndsAt       DateTime? @map("voting_ends_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  closedAt           DateTime? @map("closed_at") @db.Timestamptz(6)
+
+  createdByUser    User              @relation(fields: [createdBy], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  winnerRestaurant Restaurant?       @relation("LunchRoundWinner", fields: [winnerRestaurantId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  nominations      LunchNomination[]
+  candidates       LunchCandidate[]
+  votes            LunchVote[]
+
+  @@map("lunch_rounds")
+}
+
+model LunchNomination {
+  id           Int      @id @default(autoincrement())
+  roundId      Int      @map("round_id")
+  userId       Int      @map("user_id")
+  restaurantId Int      @map("restaurant_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  round      LunchRound @relation(fields: [roundId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([roundId, userId])
+  @@map("lunch_nominations")
+}
+
+model LunchCandidate {
+  id               Int @id @default(autoincrement())
+  roundId          Int @map("round_id")
+  restaurantId     Int @map("restaurant_id")
+  nominationCount  Int @default(0) @map("nomination_count")
+
+  round      LunchRound @relation(fields: [roundId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([roundId, restaurantId])
+  @@map("lunch_candidates")
+}
+
+model LunchVote {
+  id           Int      @id @default(autoincrement())
+  roundId      Int      @map("round_id")
+  userId       Int      @map("user_id")
+  restaurantId Int      @map("restaurant_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  round      LunchRound @relation(fields: [roundId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([roundId, userId])
+  @@map("lunch_votes")
+}

@@ -1,6 +1,6 @@
 {
     "name": "@ppt/luminis",
-    "version": "1.17.0",
+    "version": "1.19.1",
     "description": "Vendored build of Luminis design system (see scripts/sync-luminis.sh to update)",
     "main": "dist/index.cjs",
     "module": "dist/index.esm.js",
