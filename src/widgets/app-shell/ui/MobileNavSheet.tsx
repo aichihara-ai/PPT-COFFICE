@@ -39,7 +39,7 @@ export function MobileNavSheet() {
                     <SheetTitle>Office Hub</SheetTitle>
                     <SheetDescription>Go to a page</SheetDescription>
                 </SheetHeader>
-                <nav aria-label="Office pages" className="flex flex-col px-4 pb-4">
+                <nav aria-label="Office pages" className="flex flex-col gap-0.5 px-4 pb-4">
                     {Object.values(routeMeta).map((route) => {
                         const Icon = route.icon
                         const isActive = pathname === route.path
@@ -50,10 +50,8 @@ export function MobileNavSheet() {
                                 onClick={() => setOpen(false)}
                                 aria-current={isActive ? "page" : undefined}
                                 className={cn(
-                                    "flex items-center gap-3 rounded-md px-3 py-1.5 text-sm",
-                                    isActive
-                                        ? "bg-muted font-bold text-foreground"
-                                        : "font-normal text-foreground hover:bg-muted/70"
+                                    "flex items-center gap-3 px-3 py-2 text-sm text-foreground",
+                                    isActive ? "font-bold" : "font-normal"
                                 )}
                             >
                                 <Icon className="size-4 shrink-0" aria-hidden />
