@@ -1,7 +1,6 @@
 export {
     ROOM_CONFIG,
     ROOM_LABELS,
-    ROOM_SWATCH_CLASS,
     formatTimeValue,
     timesOverlap,
     type RoomBooking,

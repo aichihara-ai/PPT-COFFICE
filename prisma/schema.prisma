@@ -15,13 +15,11 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   bookings          Booking[]
-  bookingRequests   BookingRequest[]  @relation("BookingRequester")
   suggestions       Suggestion[]
   inventoryUpdates  Inventory[]       @relation("InventoryUpdatedBy")
   lunchRounds       LunchRound[]
   lunchNominations  LunchNomination[]
   lunchVotes        LunchVote[]
-  lunchSavedPicks   LunchSavedPick[]
 
   @@map("users")
 }
@@ -36,28 +34,10 @@ model Booking {
   title       String   @default("Meeting")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  requests BookingRequest[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([room, bookingDate], map: "idx_bookings_room_date")
   @@map("bookings")
-}
-
-model BookingRequest {
-  id          Int      @id @default(autoincrement())
-  bookingId   Int      @map("booking_id")
-  requesterId Int      @map("requester_id")
-  message     String?
-  status      String   @default("pending")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  requester User    @relation("BookingRequester", fields: [requesterId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([bookingId, requesterId])
-  @@index([bookingId], map: "idx_booking_requests_booking")
-  @@index([status], map: "idx_booking_requests_status")
-  @@map("booking_requests")
 }
 
 model Suggestion {
@@ -93,33 +73,28 @@ model Restaurant {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  lunchRoundsWon       LunchRound[]      @relation("LunchRoundWinner")
-  lunchRoundsSecondWon LunchRound[]      @relation("LunchRoundSecondWinner")
-  lunchNominations     LunchNomination[]
-  lunchCandidates      LunchCandidate[]
-  lunchVotes           LunchVote[]
-  lunchSavedPicks      LunchSavedPick[]
+  lunchRoundsWon     LunchRound[]      @relation("LunchRoundWinner")
+  lunchNominations   LunchNomination[]
+  lunchCandidates    LunchCandidate[]
+  lunchVotes         LunchVote[]
 
   @@map("restaurants")
 }
 
 model LunchRound {
-  id                       Int       @id @default(autoincrement())
-  status                   String    @default("voting")
-  createdBy                Int       @map("created_by")
-  winnerRestaurantId       Int?      @map("winner_restaurant_id")
-  secondWinnerRestaurantId Int?      @map("second_winner_restaurant_id")
-  votingEndsAt             DateTime? @map("voting_ends_at") @db.Timestamptz(6)
-  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  closedAt                 DateTime? @map("closed_at") @db.Timestamptz(6)
-  groupOrderUrl            String?   @map("group_order_url")
+  id                 Int       @id @default(autoincrement())
+  status             String    @default("voting")
+  createdBy          Int       @map("created_by")
+  winnerRestaurantId Int?      @map("winner_restaurant_id")
+  votingEndsAt       DateTime? @map("voting_ends_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  closedAt           DateTime? @map("closed_at") @db.Timestamptz(6)
 
-  createdByUser          User              @relation(fields: [createdBy], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  winnerRestaurant       Restaurant?       @relation("LunchRoundWinner", fields: [winnerRestaurantId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  secondWinnerRestaurant Restaurant?       @relation("LunchRoundSecondWinner", fields: [secondWinnerRestaurantId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  nominations            LunchNomination[]
-  candidates             LunchCandidate[]
-  votes                  LunchVote[]
+  createdByUser    User              @relation(fields: [createdBy], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  winnerRestaurant Restaurant?       @relation("LunchRoundWinner", fields: [winnerRestaurantId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  nominations      LunchNomination[]
+  candidates       LunchCandidate[]
+  votes            LunchVote[]
 
   @@map("lunch_rounds")
 }
@@ -135,15 +110,15 @@ model LunchNomination {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([roundId, userId, restaurantId])
+  @@unique([roundId, userId])
   @@map("lunch_nominations")
 }
 
 model LunchCandidate {
-  id              Int @id @default(autoincrement())
-  roundId         Int @map("round_id")
-  restaurantId    Int @map("restaurant_id")
-  nominationCount Int @default(0) @map("nomination_count")
+  id               Int @id @default(autoincrement())
+  roundId          Int @map("round_id")
+  restaurantId     Int @map("restaurant_id")
+  nominationCount  Int @default(0) @map("nomination_count")
 
   round      LunchRound @relation(fields: [roundId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -166,17 +141,4 @@ model LunchVote {
   @@unique([roundId, userId, restaurantId])
   @@index([roundId, userId])
   @@map("lunch_votes")
-}
-
-model LunchSavedPick {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
-  restaurantId Int      @map("restaurant_id")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([userId, restaurantId])
-  @@map("lunch_saved_picks")
 }

@@ -9,10 +9,8 @@ import {
     useLunchPanel,
     useRestaurants,
     useStartLunchRound,
-    usePickLunch,
-    useSetGroupOrderLink,
+    useVoteLunch,
 } from "@/features/manage-lunch"
-import { formatWinnerToast } from "@/shared/lib/lunch-round"
 import { PageShell } from "@/widgets/app-shell"
 import { LunchVotePanel } from "@/widgets/lunch-vote"
 import { Card, CardContent } from "@ppt/luminis"
@@ -24,15 +22,14 @@ export function LunchPage() {
     const restaurants = restaurantData?.restaurants ?? []
 
     const startMutation = useStartLunchRound()
-    const pickMutation = usePickLunch()
+    const voteMutation = useVoteLunch()
     const closeMutation = useCloseLunchRound()
     const addRestaurantMutation = useAddRestaurantFromLink()
-    const groupOrderMutation = useSetGroupOrderLink()
 
     return (
         <PageShell
             title="Office lunch vote"
-            description="Pick exactly 3 spots from the pool. When everyone's in or time's up, the top pick wins—or two if it's close (40%+)."
+            description="One step: pick up to 3 spots. The most popular option wins."
         >
             <Card>
                 <CardContent className="pt-6">
@@ -41,25 +38,21 @@ export function LunchPage() {
                         restaurants={restaurants}
                         user={user}
                         isLoading={lunchLoading}
-                        onStart={(votingEndsAt) =>
-                            startMutation.mutate(votingEndsAt, {
+                        onStart={() =>
+                            startMutation.mutate(undefined, {
                                 onSuccess: () => toast.success("Lunch round started"),
                                 onError: (e) => toast.error(e.message),
                             })
                         }
-                        onPick={(id) =>
-                            pickMutation.mutate(id, {
-                                onSuccess: (data) =>
-                                    toast.success(data.picked ? "Pick added" : "Pick removed"),
+                        onVote={(id) =>
+                            voteMutation.mutate(id, {
+                                onSuccess: () => toast.success("Vote updated"),
                                 onError: (e) => toast.error(e.message),
                             })
                         }
                         onClose={() =>
                             closeMutation.mutate(undefined, {
-                                onSuccess: (data) =>
-                                    toast.success(
-                                        formatWinnerToast(data.winnerName, data.secondWinnerName)
-                                    ),
+                                onSuccess: () => toast.success("Round closed"),
                                 onError: (e) => toast.error(e.message),
                             })
                         }
@@ -70,17 +63,10 @@ export function LunchPage() {
                                 onError: (e) => toast.error(e.message),
                             })
                         }
-                        onSetGroupOrderLink={(url) =>
-                            groupOrderMutation.mutate(url, {
-                                onSuccess: () => toast.success("Group order link saved"),
-                                onError: (e) => toast.error(e.message),
-                            })
-                        }
                         startPending={startMutation.isPending}
-                        pickPending={pickMutation.isPending}
+                        votePending={voteMutation.isPending}
                         closePending={closeMutation.isPending}
                         addRestaurantPending={addRestaurantMutation.isPending}
-                        groupOrderPending={groupOrderMutation.isPending}
                     />
                 </CardContent>
             </Card>

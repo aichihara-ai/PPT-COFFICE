@@ -31,23 +31,49 @@ export function useStartLunchRound() {
     const invalidate = useInvalidateLunch()
 
     return useMutation({
-        mutationFn: (votingEndsAt: string) =>
+        mutationFn: () =>
             apiFetch("/api/lunch", {
                 method: "POST",
-                body: JSON.stringify({ action: "start", votingEndsAt }),
+                body: JSON.stringify({ action: "start" }),
             }),
         onSuccess: invalidate,
     })
 }
 
-export function usePickLunch() {
+export function useNominateLunch() {
     const invalidate = useInvalidateLunch()
 
     return useMutation({
         mutationFn: (restaurantId: number) =>
             apiFetch("/api/lunch", {
                 method: "POST",
-                body: JSON.stringify({ action: "pick", restaurantId }),
+                body: JSON.stringify({ action: "nominate", restaurantId }),
+            }),
+        onSuccess: invalidate,
+    })
+}
+
+export function useLockLunchCandidates() {
+    const invalidate = useInvalidateLunch()
+
+    return useMutation({
+        mutationFn: () =>
+            apiFetch("/api/lunch", {
+                method: "POST",
+                body: JSON.stringify({ action: "lock" }),
+            }),
+        onSuccess: invalidate,
+    })
+}
+
+export function useVoteLunch() {
+    const invalidate = useInvalidateLunch()
+
+    return useMutation({
+        mutationFn: (restaurantId: number) =>
+            apiFetch("/api/lunch", {
+                method: "POST",
+                body: JSON.stringify({ action: "vote", restaurantId }),
             }),
         onSuccess: invalidate,
     })
@@ -61,19 +87,6 @@ export function useCloseLunchRound() {
             apiFetch("/api/lunch", {
                 method: "POST",
                 body: JSON.stringify({ action: "close" }),
-            }),
-        onSuccess: invalidate,
-    })
-}
-
-export function useSetGroupOrderLink() {
-    const invalidate = useInvalidateLunch()
-
-    return useMutation({
-        mutationFn: (groupOrderUrl: string) =>
-            apiFetch("/api/lunch", {
-                method: "POST",
-                body: JSON.stringify({ action: "setGroupOrderLink", groupOrderUrl }),
             }),
         onSuccess: invalidate,
     })
