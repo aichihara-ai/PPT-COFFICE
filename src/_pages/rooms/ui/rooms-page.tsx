@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/features/auth"
@@ -9,7 +10,7 @@ import {
     useCreateBooking,
     useDeleteBooking,
 } from "@/features/manage-bookings"
-import { formatLocalDate, ROOM_CONFIG, type RoomId } from "@/entities/booking"
+import { formatLocalDate, ROOM_CONFIG, shiftLocalDate, type RoomId } from "@/entities/booking"
 import { PageShell } from "@/widgets/app-shell"
 import { RoomDaySchedule, type RoomBookRange } from "@/widgets/room-schedule"
 import { BOOKING_TIME_SLOTS } from "@/entities/booking"
@@ -71,13 +72,35 @@ export function RoomsPage() {
                 <>
                     <div className="w-full space-y-2 sm:w-auto">
                         <Label htmlFor="booking-date">Date</Label>
-                        <Input
-                            id="booking-date"
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="w-full"
-                        />
+                        <div className="flex items-center gap-1">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="size-9 shrink-0"
+                                aria-label="Previous day"
+                                onClick={() => setDate((current) => shiftLocalDate(current, -1))}
+                            >
+                                <ChevronLeft />
+                            </Button>
+                            <Input
+                                id="booking-date"
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="min-w-0 flex-1"
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="size-9 shrink-0"
+                                aria-label="Next day"
+                                onClick={() => setDate((current) => shiftLocalDate(current, 1))}
+                            >
+                                <ChevronRight />
+                            </Button>
+                        </div>
                     </div>
                     <Button className="w-full sm:w-auto" onClick={() => openBookDialog()}>
                         Book a room
@@ -107,6 +130,7 @@ export function RoomsPage() {
                         date={date}
                         isLoading={isLoading}
                         roomStatus={date === today ? roomStatus : undefined}
+                        onDateChange={setDate}
                         onBookRoom={(roomId, range) => openBookDialog(roomId, range)}
                         onCancelBooking={(id) =>
                             deleteMutation.mutate(id, {

@@ -23,7 +23,7 @@ Preconditions:
 - Demo mode, role `Team`.
 - No existing booking titled `verify-office-hub`.
 
-- **Open rooms.** Click sidebar `Meeting rooms`. Snapshot `h1` is `Meeting rooms`. Date field labelled `Date` is present.
+- **Open rooms.** Click sidebar `Meeting rooms`. Snapshot `h1` is `Meeting rooms`. Date field labelled `Date` is present, with `Previous day` / `Next day` controls.
 - **Open dialog.** Click `Book a room`. Dialog title `Book a meeting room` appears with Room, Title, Start, End.
 - **Set title.** Fill the Title field with `verify-office-hub` (leave default room Big / `🟦 Big` and default times if free).
 - **Save.** Click `Book room`. Dialog closes. A toast `Room booked` may appear. The bookings list includes `verify-office-hub`.

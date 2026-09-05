@@ -18,6 +18,7 @@ export {
     bookingsForRoom,
     formatBookingTime,
     formatLocalDate,
+    shiftLocalDate,
     hourTickPercent,
     minuteOverlapsBooking,
     minutesFromPointerX,

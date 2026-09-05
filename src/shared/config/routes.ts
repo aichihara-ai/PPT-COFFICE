@@ -3,6 +3,7 @@ import {
     DoorOpen,
     LayoutDashboard,
     Salad,
+    Settings,
     ShoppingBag,
     type LucideIcon,
 } from "lucide-react"
@@ -44,6 +45,12 @@ export const routeMeta: Record<string, RouteMeta> = {
         label: "Office lunch",
         icon: Salad,
         group: "Office",
+    },
+    settings: {
+        path: "/settings",
+        label: "Settings",
+        icon: Settings,
+        group: "Account",
     },
 }
 

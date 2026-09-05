@@ -32,7 +32,7 @@ export function LunchPage() {
             description="One step: pick up to 3 spots. The most popular option wins."
         >
             <Card>
-                <CardContent className="pt-6">
+                <CardContent className="p-4">
                     <LunchVotePanel
                         lunchData={lunchData}
                         restaurants={restaurants}

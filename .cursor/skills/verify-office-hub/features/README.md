@@ -6,14 +6,14 @@ This directory is the maintained source for verifying user-facing behavior of Of
 
 - App is at `http://127.0.0.1:3000` using the **Next.js production build in demo mode** unless a feature file says API mode.
 - Run `.cursor/skills/verify-office-hub/bin/control-office-hub doctor` and require `verdict=healthy` and `identity=office-hub`.
-- Demo header shows **Team** / **HR Admin**. There is no login wall.
+- Demo **Settings** page shows **Team** / **HR Admin**. There is no login wall. The header has no dark-mode toggle.
 - Prefer a fresh tab. Do not hijack a teammate's live session on the shared Neon backend.
 - Never start a second server on port 3000. Never kill a process you did not launch via `control-office-hub`.
 
 ## Driving conventions
 
 - Start from `/` unless the feature lists another entry URL.
-- Use sidebar names exactly: `Dashboard`, `Meeting rooms`, `Kitchen snacks`, `Coffee & milk`, `Office lunch`.
+- Use sidebar names exactly: `Dashboard`, `Meeting rooms`, `Kitchen snacks`, `Coffee & milk`, `Office lunch`, `Settings`.
 - Drive with Chrome DevTools MCP: snapshot, then click/fill by uid from the latest snapshot.
 - Restore mutated demo data after the recipe (cancel the verify booking, revert inventory if you flipped it). Keep artifacts.
 

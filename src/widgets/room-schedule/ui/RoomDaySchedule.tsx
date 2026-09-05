@@ -1,4 +1,5 @@
 import { Fragment } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { RoomTimelineTrack } from "@/widgets/room-schedule/ui/RoomTimelineTrack"
 import { RoomTitle } from "@/widgets/room-schedule/ui/RoomTitle"
@@ -8,6 +9,7 @@ import {
     hourTickPercent,
     nowMarkerStyle,
     SCHEDULE_HOUR_LABELS,
+    shiftLocalDate,
     sortBookings,
 } from "@/entities/booking"
 import { cn } from "@/shared/lib/cn"
@@ -37,6 +39,7 @@ type RoomDayScheduleProps = {
     onBookRoom?: (roomId: RoomId, range?: RoomBookRange) => void
     onCancelBooking?: (id: number) => void
     canCancelBooking?: (booking: RoomBooking) => boolean
+    onDateChange?: (date: string) => void
 }
 
 function formatScheduleDate(date: string) {
@@ -67,6 +70,7 @@ export function RoomDaySchedule({
     onBookRoom,
     onCancelBooking,
     canCancelBooking,
+    onDateChange,
 }: RoomDayScheduleProps) {
     const sortedBookings = sortBookings(bookings)
     const nowMarker = nowMarkerStyle(date)
@@ -81,9 +85,35 @@ export function RoomDaySchedule({
         <div className={showAgenda ? "space-y-4" : "space-y-0"}>
             <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground">
-                        {formatScheduleDate(date)}
-                    </p>
+                    <div className="flex items-center gap-0.5">
+                        {onDateChange ? (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                aria-label="Previous day"
+                                onClick={() => onDateChange(shiftLocalDate(date, -1))}
+                            >
+                                <ChevronLeft />
+                            </Button>
+                        ) : null}
+                        <p className="text-sm font-medium text-foreground">
+                            {formatScheduleDate(date)}
+                        </p>
+                        {onDateChange ? (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                aria-label="Next day"
+                                onClick={() => onDateChange(shiftLocalDate(date, 1))}
+                            >
+                                <ChevronRight />
+                            </Button>
+                        ) : null}
+                    </div>
                     {canBook ? (
                         <p className="text-xs text-muted-foreground">
                             Drag on a room row to pick a time (Outlook-style)
