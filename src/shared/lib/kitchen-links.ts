@@ -66,3 +66,12 @@ export function kitchenLinkLabel(value: string) {
         return value
     }
 }
+
+export function kitchenItemDisplayTitle(
+    text: string,
+    title?: string | null
+) {
+    const trimmed = title?.trim()
+    if (trimmed) return trimmed
+    return kitchenLinkLabel(text)
+}

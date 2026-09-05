@@ -35,4 +35,4 @@ Each feature file starts with an H1 and one paragraph, then exactly four H2 sect
 - [Meeting rooms](./meeting-rooms.md) covers booking and cancelling Maple/Cedar (Big/Small) rooms.
 - [Kitchen wishlist](./kitchen-wishlist.md) covers adding a product link to the open wishlist.
 - [Coffee and milk](./coffee-milk.md) covers marking stock low and HR restock.
-- [Office lunch](./office-lunch.md) covers start → nominate → lock → vote (destructive on a live round; demo only unless isolated).
+- [Office lunch](./office-lunch.md) covers start → vote (up to 3) → one winner (destructive on a live round; demo only unless isolated).

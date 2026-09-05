@@ -17,10 +17,19 @@ export function useAddSuggestion() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (text: string) =>
+        mutationFn: ({
+            text,
+            title,
+        }: {
+            text: string
+            title?: string
+        }) =>
             apiFetch("/api/suggestions", {
                 method: "POST",
-                body: JSON.stringify({ text: normalizeSuggestionUrl(text) }),
+                body: JSON.stringify({
+                    text: normalizeSuggestionUrl(text),
+                    title,
+                }),
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: suggestionsKey })

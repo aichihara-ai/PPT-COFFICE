@@ -1,10 +1,15 @@
-import { kitchenLinkLabel, normalizeKitchenUrl } from "@/shared/lib/kitchen-links"
+import {
+    kitchenItemDisplayTitle,
+    kitchenLinkLabel,
+    normalizeKitchenUrl,
+} from "@/shared/lib/kitchen-links"
 import type { SuggestionStatus } from "@/entities/suggestion"
 import { Badge, Button } from "@ppt/luminis"
 
 type KitchenSuggestionItemProps = {
     id: number
     text: string
+    title?: string | null
     status: SuggestionStatus
     userName: string
     isAdmin?: boolean
@@ -21,6 +26,7 @@ const STATUS_VARIANT: Record<SuggestionStatus, "default" | "secondary" | "destru
 export function KitchenSuggestionItem({
     id,
     text,
+    title,
     status,
     userName,
     isAdmin = false,
@@ -28,7 +34,9 @@ export function KitchenSuggestionItem({
     onDecline,
 }: KitchenSuggestionItemProps) {
     const href = normalizeKitchenUrl(text)
-    const label = kitchenLinkLabel(text)
+    const label = kitchenItemDisplayTitle(text, title)
+    const fallback = kitchenLinkLabel(text)
+    const showFallback = Boolean(title?.trim()) && fallback !== label
 
     return (
         <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -43,8 +51,11 @@ export function KitchenSuggestionItem({
                         {label}
                     </a>
                 ) : (
-                    <p className="truncate font-medium">{text}</p>
+                    <p className="truncate font-medium">{label}</p>
                 )}
+                {showFallback ? (
+                    <p className="truncate text-xs text-muted-foreground">{fallback}</p>
+                ) : null}
                 <p className="text-sm text-muted-foreground">{userName}</p>
             </div>
             <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end">

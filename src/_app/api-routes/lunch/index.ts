@@ -3,6 +3,7 @@ import "server-only"
 import type { NextRequest } from "next/server"
 import { z } from "zod"
 
+import { MAX_LUNCH_VOTES, pickLunchWinner } from "@/entities/lunch-round"
 import { prisma } from "@/shared/db/index.server"
 import {
     jsonResponse,
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
             users: [],
             myNomination: null,
             myVote: null,
+            myVotes: [],
         })
     }
 
@@ -143,7 +145,10 @@ export async function GET(request: NextRequest) {
     })
 
     const myNomination = nominations.find((n) => n.userId === auth.user.id)
-    const myVote = votes.find((v) => v.userId === auth.user.id)
+    const myVotes = votes
+        .filter((v) => v.userId === auth.user.id)
+        .map((v) => ({ restaurant_id: v.restaurantId }))
+    const myVote = myVotes[0] ?? null
 
     return jsonResponse(200, {
         round: {
@@ -173,6 +178,7 @@ export async function GET(request: NextRequest) {
         votes: votes.map((v) => ({
             user_id: v.userId,
             restaurant_id: v.restaurantId,
+            created_at: v.createdAt.toISOString(),
             user_name: v.user.name,
             restaurant_name: v.restaurant.name,
         })),
@@ -181,7 +187,8 @@ export async function GET(request: NextRequest) {
         myNomination: myNomination
             ? { restaurant_id: myNomination.restaurantId }
             : null,
-        myVote: myVote ? { restaurant_id: myVote.restaurantId } : null,
+        myVote,
+        myVotes,
     })
 }
 
@@ -207,8 +214,9 @@ export async function POST(request: NextRequest) {
 
         const created = await prisma.lunchRound.create({
             data: {
-                status: "nominating",
+                status: "voting",
                 createdBy: auth.user.id,
+                votingEndsAt: new Date(Date.now() + 15 * 60 * 1000),
             },
         })
 
@@ -306,7 +314,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "vote") {
-        if (round.status !== "voting") {
+        if (round.status !== "voting" && round.status !== "nominating") {
             return jsonResponse(400, { error: "Voting is not open" })
         }
 
@@ -314,51 +322,71 @@ export async function POST(request: NextRequest) {
             return jsonResponse(400, { error: "Restaurant required" })
         }
 
-        const candidate = await prisma.lunchCandidate.findFirst({
-            where: { roundId: round.id, restaurantId },
+        const restaurant = await prisma.restaurant.findFirst({
+            where: { id: restaurantId, active: true },
         })
 
-        if (!candidate) {
+        if (!restaurant) {
             return jsonResponse(400, {
-                error: "Can only vote for locked candidates",
+                error: "Can only vote for restaurants in the pool",
             })
         }
 
-        await prisma.lunchVote.upsert({
+        const existing = await prisma.lunchVote.findUnique({
             where: {
-                roundId_userId: {
+                roundId_userId_restaurantId: {
                     roundId: round.id,
                     userId: auth.user.id,
+                    restaurantId,
                 },
             },
-            create: {
+        })
+
+        if (existing) {
+            await prisma.lunchVote.delete({ where: { id: existing.id } })
+            return jsonResponse(200, { ok: true, selected: false })
+        }
+
+        const selectedCount = await prisma.lunchVote.count({
+            where: { roundId: round.id, userId: auth.user.id },
+        })
+
+        if (selectedCount >= MAX_LUNCH_VOTES) {
+            return jsonResponse(400, {
+                error: `You can vote for at most ${MAX_LUNCH_VOTES} options`,
+            })
+        }
+
+        await prisma.lunchVote.create({
+            data: {
                 roundId: round.id,
                 userId: auth.user.id,
                 restaurantId,
             },
-            update: { restaurantId },
         })
 
-        return jsonResponse(200, { ok: true })
+        return jsonResponse(200, { ok: true, selected: true })
     }
 
     if (action === "close") {
         const denied = requireAdmin(auth.user)
         if (denied) return denied
 
-        if (round.status !== "voting") {
-            return jsonResponse(400, { error: "Round must be in voting phase" })
+        if (round.status !== "voting" && round.status !== "nominating") {
+            return jsonResponse(400, { error: "Round must be open to close" })
         }
 
-        const winner = await prisma.lunchVote.groupBy({
-            by: ["restaurantId"],
+        const roundVotes = await prisma.lunchVote.findMany({
             where: { roundId: round.id },
-            _count: { restaurantId: true },
-            orderBy: [{ _count: { restaurantId: "desc" } }],
-            take: 1,
+            select: { restaurantId: true, createdAt: true },
         })
 
-        const winnerId = winner[0]?.restaurantId ?? null
+        const winnerId = pickLunchWinner(
+            roundVotes.map((vote) => ({
+                restaurant_id: vote.restaurantId,
+                created_at: vote.createdAt.toISOString(),
+            }))
+        )
 
         await prisma.lunchRound.update({
             where: { id: round.id },

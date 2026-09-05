@@ -6,9 +6,7 @@ import { useRequiredUser } from "@/features/auth"
 import {
     useAddRestaurantFromLink,
     useCloseLunchRound,
-    useLockLunchCandidates,
     useLunchPanel,
-    useNominateLunch,
     useRestaurants,
     useStartLunchRound,
     useVoteLunch,
@@ -24,8 +22,6 @@ export function LunchPage() {
     const restaurants = restaurantData?.restaurants ?? []
 
     const startMutation = useStartLunchRound()
-    const nominateMutation = useNominateLunch()
-    const lockMutation = useLockLunchCandidates()
     const voteMutation = useVoteLunch()
     const closeMutation = useCloseLunchRound()
     const addRestaurantMutation = useAddRestaurantFromLink()
@@ -33,7 +29,7 @@ export function LunchPage() {
     return (
         <PageShell
             title="Office lunch vote"
-            description="Nominate → lock top 3 → vote. One pick per person."
+            description="One step: pick up to 3 spots. The most popular option wins."
         >
             <Card>
                 <CardContent className="pt-6">
@@ -48,21 +44,9 @@ export function LunchPage() {
                                 onError: (e) => toast.error(e.message),
                             })
                         }
-                        onNominate={(id) =>
-                            nominateMutation.mutate(id, {
-                                onSuccess: () => toast.success("Nomination saved"),
-                                onError: (e) => toast.error(e.message),
-                            })
-                        }
-                        onLock={() =>
-                            lockMutation.mutate(undefined, {
-                                onSuccess: () => toast.success("Top 3 locked — voting open"),
-                                onError: (e) => toast.error(e.message),
-                            })
-                        }
                         onVote={(id) =>
                             voteMutation.mutate(id, {
-                                onSuccess: () => toast.success("Vote recorded"),
+                                onSuccess: () => toast.success("Vote updated"),
                                 onError: (e) => toast.error(e.message),
                             })
                         }
@@ -80,8 +64,6 @@ export function LunchPage() {
                             })
                         }
                         startPending={startMutation.isPending}
-                        nominatePending={nominateMutation.isPending}
-                        lockPending={lockMutation.isPending}
                         votePending={voteMutation.isPending}
                         closePending={closeMutation.isPending}
                         addRestaurantPending={addRestaurantMutation.isPending}

@@ -3,7 +3,10 @@ import "server-only"
 import type { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { normalizeSuggestionUrl } from "@/entities/suggestion"
+import {
+    normalizeSuggestionTitle,
+    normalizeSuggestionUrl,
+} from "@/entities/suggestion"
 import { prisma } from "@/shared/db/index.server"
 import {
     jsonResponse,
@@ -14,6 +17,7 @@ import {
 
 const createSchema = z.object({
     text: z.string(),
+    title: z.string().optional(),
 })
 
 const patchSchema = z.object({
@@ -33,6 +37,7 @@ export async function GET(request: NextRequest) {
         suggestions: rows.map((row) => ({
             id: row.id,
             text: row.text,
+            title: row.title,
             status: row.status,
             created_at: row.createdAt.toISOString(),
             user_name: row.user.name,
@@ -58,14 +63,17 @@ export async function POST(request: NextRequest) {
         })
     }
 
+    const title = normalizeSuggestionTitle(parsed.data.title)
+
     const created = await prisma.suggestion.create({
-        data: { userId: auth.user.id, text },
+        data: { userId: auth.user.id, text, title },
     })
 
     return jsonResponse(201, {
         suggestion: {
             id: created.id,
             text: created.text,
+            title: created.title,
             status: created.status,
             created_at: created.createdAt.toISOString(),
         },
@@ -95,6 +103,7 @@ export async function PATCH(request: NextRequest) {
             suggestion: {
                 id: updated.id,
                 text: updated.text,
+                title: updated.title,
                 status: updated.status,
             },
         })
