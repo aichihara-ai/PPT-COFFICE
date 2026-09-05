@@ -31,49 +31,23 @@ export function useStartLunchRound() {
     const invalidate = useInvalidateLunch()
 
     return useMutation({
-        mutationFn: () =>
+        mutationFn: (votingEndsAt: string) =>
             apiFetch("/api/lunch", {
                 method: "POST",
-                body: JSON.stringify({ action: "start" }),
+                body: JSON.stringify({ action: "start", votingEndsAt }),
             }),
         onSuccess: invalidate,
     })
 }
 
-export function useNominateLunch() {
+export function usePickLunch() {
     const invalidate = useInvalidateLunch()
 
     return useMutation({
         mutationFn: (restaurantId: number) =>
-            apiFetch("/api/lunch", {
+            apiFetch<{ picked: boolean }>("/api/lunch", {
                 method: "POST",
-                body: JSON.stringify({ action: "nominate", restaurantId }),
-            }),
-        onSuccess: invalidate,
-    })
-}
-
-export function useLockLunchCandidates() {
-    const invalidate = useInvalidateLunch()
-
-    return useMutation({
-        mutationFn: () =>
-            apiFetch("/api/lunch", {
-                method: "POST",
-                body: JSON.stringify({ action: "lock" }),
-            }),
-        onSuccess: invalidate,
-    })
-}
-
-export function useVoteLunch() {
-    const invalidate = useInvalidateLunch()
-
-    return useMutation({
-        mutationFn: (restaurantId: number) =>
-            apiFetch("/api/lunch", {
-                method: "POST",
-                body: JSON.stringify({ action: "vote", restaurantId }),
+                body: JSON.stringify({ action: "pick", restaurantId }),
             }),
         onSuccess: invalidate,
     })
@@ -84,9 +58,25 @@ export function useCloseLunchRound() {
 
     return useMutation({
         mutationFn: () =>
-            apiFetch("/api/lunch", {
+            apiFetch<{
+                winnerName: string | null
+                secondWinnerName: string | null
+            }>("/api/lunch", {
                 method: "POST",
                 body: JSON.stringify({ action: "close" }),
+            }),
+        onSuccess: invalidate,
+    })
+}
+
+export function useSetGroupOrderLink() {
+    const invalidate = useInvalidateLunch()
+
+    return useMutation({
+        mutationFn: (groupOrderUrl: string) =>
+            apiFetch("/api/lunch", {
+                method: "POST",
+                body: JSON.stringify({ action: "setGroupOrderLink", groupOrderUrl }),
             }),
         onSuccess: invalidate,
     })

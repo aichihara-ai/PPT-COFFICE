@@ -9,10 +9,11 @@ import {
     rangeOverlapsBooking,
     selectionBlockStyle,
     SCHEDULE_SLOT_MINUTES,
-} from "@/entities/booking"
-import { cn } from "@/shared/lib/cn"
-import type { RoomBooking } from "@/entities/booking"
+} from "@/entities/booking/lib/room-schedule"
+import { cn } from "@/shared/lib/utils"
+import type { BookingRequest, RoomBooking } from "@/entities/booking"
 import type { RoomId } from "@/entities/booking"
+import { Button } from "@ppt/luminis"
 
 type RoomTimelineTrackProps = {
     roomId: RoomId
@@ -21,11 +22,29 @@ type RoomTimelineTrackProps = {
     nowMarkerLeft?: string | null
     rowClassName: string
     onDragBook?: (startTime: string, endTime: string) => void
+    currentUserId?: number
+    requests?: BookingRequest[]
+    onRequestBooking?: (booking: RoomBooking) => void
+    requestPending?: boolean
 }
 
 type DragState = {
     anchorMinutes: number
     currentMinutes: number
+}
+
+function userPendingRequest(
+    requests: BookingRequest[] | undefined,
+    bookingId: number,
+    userId?: number
+) {
+    if (!userId || !requests) return false
+    return requests.some(
+        (request) =>
+            request.booking_id === bookingId &&
+            request.requester_id === userId &&
+            request.status === "pending"
+    )
 }
 
 export function RoomTimelineTrack({
@@ -35,6 +54,10 @@ export function RoomTimelineTrack({
     nowMarkerLeft = null,
     rowClassName,
     onDragBook,
+    currentUserId,
+    requests,
+    onRequestBooking,
+    requestPending = false,
 }: RoomTimelineTrackProps) {
     const trackRef = useRef<HTMLDivElement>(null)
     const [drag, setDrag] = useState<DragState | null>(null)
@@ -59,6 +82,7 @@ export function RoomTimelineTrack({
 
     const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
         if (!canDrag || !trackRef.current || event.button !== 0) return
+        if ((event.target as HTMLElement).closest("[data-booking-action]")) return
 
         const minutes = minutesFromPointerX(trackRef.current, event.clientX)
         if (minuteOverlapsBooking(minutes, bookings)) return
@@ -104,7 +128,7 @@ export function RoomTimelineTrack({
             ref={trackRef}
             className={cn(
                 "relative min-w-0 flex-1 rounded-lg border border-dashed border-border-medium bg-muted/40 touch-none select-none",
-                compact ? "h-10" : "h-12",
+                compact ? "h-11" : "h-14",
                 canDrag && "cursor-crosshair"
             )}
             onPointerDown={handlePointerDown}
@@ -115,7 +139,6 @@ export function RoomTimelineTrack({
         >
             {nowMarkerLeft ? (
                 <div
-                    data-now-marker
                     className="pointer-events-none absolute inset-y-1 z-10 w-0.5 bg-destructive"
                     style={{ left: nowMarkerLeft }}
                     aria-hidden
@@ -142,22 +165,57 @@ export function RoomTimelineTrack({
 
             {bookings.map((booking) => {
                 const style = bookingBlockStyle(booking)
+                const isOwnBooking = booking.user_id === currentUserId
+                const requestSent = userPendingRequest(requests, booking.id, currentUserId)
+                const canRequest =
+                    !isOwnBooking && onRequestBooking && !requestSent
+
                 return (
                     <div
                         key={booking.id}
                         className={cn(
-                            "pointer-events-none absolute inset-y-1 z-30 overflow-hidden rounded-md border px-2 py-1 text-xs leading-tight",
+                            "group pointer-events-auto absolute inset-y-1 z-30 min-w-0 overflow-hidden rounded-md border",
                             rowClassName
                         )}
                         style={style}
                         title={`${booking.title} · ${formatBookingTime(booking.start_time)}–${formatBookingTime(booking.end_time)} · ${booking.user_name}`}
                     >
-                        <p className="truncate font-medium">{booking.title}</p>
-                        {!compact ? (
-                            <p className="truncate text-muted-foreground">
-                                {formatBookingTime(booking.start_time)}–
-                                {formatBookingTime(booking.end_time)}
+                        <div
+                            className={cn(
+                                "flex h-full flex-col justify-center px-1.5 py-0.5 transition-opacity",
+                                (canRequest || requestSent) &&
+                                    "group-hover:opacity-0 group-focus-within:opacity-0"
+                            )}
+                        >
+                            <p className="truncate text-[11px] font-medium leading-tight">
+                                {booking.title}
                             </p>
+                            {!compact ? (
+                                <p className="truncate text-[10px] leading-tight opacity-80">
+                                    {formatBookingTime(booking.start_time)}–
+                                    {formatBookingTime(booking.end_time)} · {booking.user_name}
+                                </p>
+                            ) : null}
+                        </div>
+                        {canRequest ? (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                data-booking-action
+                                className="absolute inset-0 z-10 h-full w-full min-w-0 rounded-md px-1 text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+                                onClick={(event) => {
+                                    event.stopPropagation()
+                                    onRequestBooking?.(booking)
+                                }}
+                                disabled={requestPending}
+                            >
+                                Request
+                            </Button>
+                        ) : requestSent ? (
+                            <span className="absolute inset-0 z-10 flex items-center justify-center text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-80 group-focus-within:opacity-80">
+                                Sent
+                            </span>
                         ) : null}
                     </div>
                 )

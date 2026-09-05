@@ -1,3 +1,4 @@
+import { buildLunchPoolRestaurants } from "@/shared/config/lunch-restaurants"
 import { normalizeKitchenUrl } from "@/shared/lib/kitchen-links"
 import { resolveRestaurantName, withoutUnlinkedPoolRestaurants } from "@/shared/lib/restaurant-title"
 import { MAX_LUNCH_VOTES, pickLunchWinner } from "@/shared/lib/lunch-vote"
@@ -74,8 +75,9 @@ type DemoState = {
 }
 
 function defaultState(): DemoState {
+    const restaurants = buildLunchPoolRestaurants(1)
     return {
-        nextId: 100,
+        nextId: 100 + restaurants.length,
         user: { id: 1, name: "Team", isAdmin: false },
         bookings: [],
         suggestions: [],
@@ -83,13 +85,27 @@ function defaultState(): DemoState {
             coffee: { status: "ok", updated_at: new Date().toISOString(), updated_by_name: "Team" },
             milk: { status: "ok", updated_at: new Date().toISOString(), updated_by_name: "Team" },
         },
-        restaurants: [],
+        restaurants,
         lunchRound: null,
         nominations: [],
         candidates: [],
         votes: [],
         lastClosedWinner: null,
     }
+}
+
+function ensureLunchPoolSeeded(state: DemoState) {
+    const linkedRestaurants = withoutUnlinkedPoolRestaurants(state.restaurants ?? [])
+    if (linkedRestaurants.length > 0) {
+        const stripped = linkedRestaurants.length !== (state.restaurants?.length ?? 0)
+        state.restaurants = linkedRestaurants
+        return stripped
+    }
+
+    const seeded = buildLunchPoolRestaurants(1)
+    state.restaurants = seeded
+    state.nextId = Math.max(state.nextId, 100 + seeded.length)
+    return true
 }
 
 function load(): DemoState {
@@ -111,12 +127,8 @@ function load(): DemoState {
             }
         }
         const merged = { ...defaultState(), ...parsed }
-        const linkedRestaurants = withoutUnlinkedPoolRestaurants(merged.restaurants ?? [])
-        const strippedSeeds =
-            Array.isArray(parsed.restaurants) &&
-            parsed.restaurants.length !== linkedRestaurants.length
-        merged.restaurants = linkedRestaurants
-        if (strippedSeeds) {
+        const seeded = ensureLunchPoolSeeded(merged)
+        if (seeded) {
             save(merged)
         }
         return merged

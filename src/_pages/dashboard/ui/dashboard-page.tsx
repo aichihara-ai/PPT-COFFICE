@@ -20,13 +20,14 @@ import {
     useAddRestaurantFromLink,
     useCloseLunchRound,
     useLunchPanel,
+    usePickLunch,
     useRestaurants,
+    useSetGroupOrderLink,
     useStartLunchRound,
-    useVoteLunch,
 } from "@/features/manage-lunch"
 import { formatLocalDate, ROOM_CONFIG, type RoomId } from "@/entities/booking"
 import { INVENTORY_ITEM_CONFIG } from "@/entities/inventory"
-import { DashboardStatCard, PageShell } from "@/widgets/app-shell"
+import { DashboardStatCard } from "@/widgets/app-shell"
 import { KitchenSuggestionItem, KitchenWishlistForm } from "@/widgets/kitchen-wishlist"
 import { LunchVotePanel } from "@/widgets/lunch-vote"
 import {
@@ -88,8 +89,9 @@ export function DashboardPage() {
     const snackUpdateMutation = useUpdateSuggestionStatus()
     const inventoryMutation = useUpdateInventory()
     const lunchStartMutation = useStartLunchRound()
-    const lunchVoteMutation = useVoteLunch()
+    const lunchPickMutation = usePickLunch()
     const lunchCloseMutation = useCloseLunchRound()
+    const lunchGroupOrderMutation = useSetGroupOrderLink()
     const addRestaurantMutation = useAddRestaurantFromLink()
 
     const roomStatus = bookingsData?.roomStatus ?? []
@@ -147,10 +149,7 @@ export function DashboardPage() {
     }
 
     return (
-        <PageShell
-            title="Dashboard"
-            description="Everything happening in the Vancouver office — act on it right here."
-        >
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6">
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <DashboardStatCard
                     icon="🚪"
@@ -225,7 +224,7 @@ export function DashboardPage() {
                 </CardContent>
             </Card>
 
-            <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                     <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <div>
@@ -371,59 +370,64 @@ export function DashboardPage() {
                         })}
                     </CardContent>
                 </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <div>
-                            <CardTitle>Lunch vote</CardTitle>
-                            <CardDescription>Pick up to 3 · one winner</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="sm" className="w-full sm:w-auto" asChild>
-                            <Link href="/lunch">
-                                View all
-                                <ArrowRight className="size-4" />
-                            </Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <LunchVotePanel
-                            lunchData={lunchData}
-                            restaurants={restaurants}
-                            user={user}
-                            compact
-                            onStart={() =>
-                                lunchStartMutation.mutate(undefined, {
-                                    onSuccess: () => toast.success("Lunch round started"),
-                                    onError: (e) => toast.error(e.message),
-                                })
-                            }
-                            onVote={(id) =>
-                                lunchVoteMutation.mutate(id, {
-                                    onSuccess: () => toast.success("Vote updated"),
-                                    onError: (e) => toast.error(e.message),
-                                })
-                            }
-                            onClose={() =>
-                                lunchCloseMutation.mutate(undefined, {
-                                    onSuccess: () => toast.success("Round closed"),
-                                    onError: (e) => toast.error(e.message),
-                                })
-                            }
-                            onAddRestaurant={(input) =>
-                                addRestaurantMutation.mutate(input, {
-                                    onSuccess: () =>
-                                        toast.success("Restaurant added to pool"),
-                                    onError: (e) => toast.error(e.message),
-                                })
-                            }
-                            startPending={lunchStartMutation.isPending}
-                            votePending={lunchVoteMutation.isPending}
-                            closePending={lunchCloseMutation.isPending}
-                            addRestaurantPending={addRestaurantMutation.isPending}
-                        />
-                    </CardContent>
-                </Card>
             </div>
+
+            <Card>
+                <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div>
+                        <CardTitle>Lunch vote</CardTitle>
+                        <CardDescription>Pick up to 3 · one winner</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-full sm:w-auto" asChild>
+                        <Link href="/lunch">
+                            View all
+                            <ArrowRight className="size-4" />
+                        </Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <LunchVotePanel
+                        lunchData={lunchData}
+                        restaurants={restaurants}
+                        user={user}
+                        onStart={(votingEndsAt) =>
+                            lunchStartMutation.mutate(votingEndsAt, {
+                                onSuccess: () => toast.success("Lunch round started"),
+                                onError: (e) => toast.error(e.message),
+                            })
+                        }
+                        onPick={(id) =>
+                            lunchPickMutation.mutate(id, {
+                                onError: (e) => toast.error(e.message),
+                            })
+                        }
+                        onClose={() =>
+                            lunchCloseMutation.mutate(undefined, {
+                                onSuccess: () => toast.success("Round closed"),
+                                onError: (e) => toast.error(e.message),
+                            })
+                        }
+                        onAddRestaurant={(input) =>
+                            addRestaurantMutation.mutate(input, {
+                                onSuccess: () =>
+                                    toast.success("Restaurant added to pool"),
+                                onError: (e) => toast.error(e.message),
+                            })
+                        }
+                        onSetGroupOrderLink={(url) =>
+                            lunchGroupOrderMutation.mutate(url, {
+                                onSuccess: () => toast.success("Group order link saved"),
+                                onError: (e) => toast.error(e.message),
+                            })
+                        }
+                        startPending={lunchStartMutation.isPending}
+                        pickPending={lunchPickMutation.isPending}
+                        closePending={lunchCloseMutation.isPending}
+                        addRestaurantPending={addRestaurantMutation.isPending}
+                        groupOrderPending={lunchGroupOrderMutation.isPending}
+                    />
+                </CardContent>
+            </Card>
 
             <Dialog open={bookDialogOpen} onOpenChange={setBookDialogOpen}>
                 <DialogContent>
@@ -517,6 +521,6 @@ export function DashboardPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </PageShell>
+        </div>
     )
 }
