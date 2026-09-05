@@ -1,6 +1,7 @@
 import { RESTAURANT_TITLE_MAX_LENGTH } from "@/entities/restaurant"
 import { isValidUberEatsUrl, normalizeUberEatsUrl } from "@/shared/lib/uber-eats-links"
-import { Button, Input, Label } from "@ppt/luminis"
+import { cn } from "@/shared/lib/utils"
+import { Button, Input } from "@ppt/luminis"
 
 type AddRestaurantLinkFormProps = {
     value: string
@@ -26,26 +27,25 @@ export function AddRestaurantLinkForm({
     const normalized = normalizeUberEatsUrl(value)
     const isValid = isValidUberEatsUrl(value)
     const titleId = `${inputId}-title`
+    const inputClass = compact ? "h-8 min-w-0 text-sm" : "min-w-0"
 
     return (
         <div className="space-y-2">
-            <Label htmlFor={titleId}>Title (optional)</Label>
-            <Input
-                id={titleId}
-                value={title}
-                onChange={(e) => onTitleChange(e.target.value)}
-                placeholder="e.g. Guu Garden"
-                maxLength={RESTAURANT_TITLE_MAX_LENGTH}
-                className={compact ? "h-8 text-sm" : undefined}
-            />
-            <Label htmlFor={inputId}>Uber Eats link</Label>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-center")}>
+                <Input
+                    id={titleId}
+                    value={title}
+                    onChange={(e) => onTitleChange(e.target.value)}
+                    placeholder="Title"
+                    maxLength={RESTAURANT_TITLE_MAX_LENGTH}
+                    className={cn(inputClass, "sm:w-40 sm:shrink-0")}
+                />
                 <Input
                     id={inputId}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder="https://www.ubereats.com/ca/store/..."
-                    className={compact ? "h-8 min-w-0 w-full text-sm" : "min-w-0 w-full"}
+                    className={cn(inputClass, "min-w-0 flex-1")}
                 />
                 <Button
                     size="sm"
@@ -64,7 +64,7 @@ export function AddRestaurantLinkForm({
                 </p>
             ) : (
                 <p className="text-xs text-muted-foreground">
-                    Title is shown in the pool. If you skip it, we use the store name from the link.
+                    Title shows in the pool. Leave blank to use the store name from the link.
                 </p>
             )}
         </div>

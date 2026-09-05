@@ -3,8 +3,10 @@ import "server-only"
 import bcrypt from "bcryptjs"
 import type { NextRequest } from "next/server"
 
+import { LUNCH_RESTAURANT_SEEDS } from "@/shared/config/lunch-restaurants"
 import { prisma } from "@/shared/db/index.server"
 import { jsonResponse, methodNotAllowed } from "@/shared/auth/index.server"
+import { extractUberEatsMenuFromUrlOnly } from "@/shared/lib/uber-eats-menu"
 
 export async function POST(request: NextRequest) {
     const setupSecret = process.env.SETUP_SECRET
@@ -45,6 +47,22 @@ export async function POST(request: NextRequest) {
                     isAdmin: true,
                 },
             }),
+            ...LUNCH_RESTAURANT_SEEDS.map((seed) =>
+                prisma.restaurant.upsert({
+                    where: { name: seed.name },
+                    create: {
+                        name: seed.name,
+                        notes: seed.notes,
+                        uberEatsUrl: seed.uberEatsUrl,
+                        menuPreview: extractUberEatsMenuFromUrlOnly(seed.uberEatsUrl),
+                    },
+                    update: {
+                        notes: seed.notes,
+                        uberEatsUrl: seed.uberEatsUrl,
+                        active: true,
+                    },
+                })
+            ),
         ])
 
         return jsonResponse(200, {

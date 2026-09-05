@@ -17,6 +17,14 @@ export const RESTAURANT_IMAGES: Record<string, RestaurantImageSet> = {
         thumbnail: "/lunch/nuba.jpg",
         items: ["/lunch/nuba.jpg"],
     },
+    Earls: {
+        thumbnail: "/lunch/earls.jpg",
+        items: ["/lunch/earls.jpg"],
+    },
+    "Cactus Club": {
+        thumbnail: "/lunch/cactus-club.jpg",
+        items: ["/lunch/cactus-club.jpg"],
+    },
     "Honest Greens": {
         thumbnail: "/lunch/honest-greens.jpg",
         items: ["/lunch/honest-greens.jpg"],
@@ -33,6 +41,14 @@ export const RESTAURANT_IMAGES: Record<string, RestaurantImageSet> = {
         thumbnail: "/lunch/banana-leaf.jpg",
         items: ["/lunch/banana-leaf.jpg"],
     },
+    "Peaceful Restaurant": {
+        thumbnail: "/lunch/peaceful-restaurant.webp",
+        items: ["/lunch/peaceful-restaurant.webp"],
+    },
+    Jamjar: {
+        thumbnail: "/lunch/jamjar.jpg",
+        items: ["/lunch/jamjar.jpg"],
+    },
     "Nando's": {
         thumbnail: "/lunch/nandos.jpg",
         items: ["/lunch/nandos.jpg"],
@@ -44,6 +60,10 @@ export const RESTAURANT_IMAGES: Record<string, RestaurantImageSet> = {
     Freshii: {
         thumbnail: "/lunch/freshii.jpg",
         items: ["/lunch/freshii.jpg"],
+    },
+    "Burgers + Fries": {
+        thumbnail: "/lunch/burgers-fries.jpg",
+        items: ["/lunch/burgers-fries.jpg"],
     },
 }
 
