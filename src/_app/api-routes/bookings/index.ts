@@ -62,12 +62,12 @@ function buildRoomStatus(
 
     return (["room_a", "room_b"] as const).map((room) => {
         const roomBookings = rows.filter((b) => b.room === room)
-        const active =
-            isToday &&
-            roomBookings.find(
-                (b) =>
-                    b.start_time <= currentTime && b.end_time > currentTime
-            )
+        const active = isToday
+            ? roomBookings.find(
+                  (b) =>
+                      b.start_time <= currentTime && b.end_time > currentTime
+              )
+            : undefined
 
         if (active) {
             return {
@@ -79,9 +79,9 @@ function buildRoomStatus(
             }
         }
 
-        const next =
-            isToday &&
-            roomBookings.find((b) => b.start_time > currentTime)
+        const next = isToday
+            ? roomBookings.find((b) => b.start_time > currentTime)
+            : undefined
 
         return {
             room,
