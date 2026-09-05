@@ -1,9 +1,10 @@
 export {
     useAddRestaurantFromLink,
     useCloseLunchRound,
+    useLockLunchCandidates,
     useLunchPanel,
-    usePickLunch,
+    useNominateLunch,
     useRestaurants,
-    useSetGroupOrderLink,
     useStartLunchRound,
+    useVoteLunch,
 } from "./model/hooks"

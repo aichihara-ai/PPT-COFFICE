@@ -8,8 +8,6 @@ export type LunchPanelData = {
         closed_at?: string | null
         winner_restaurant_id?: number | null
         winner_name?: string | null
-        second_winner_name?: string | null
-        group_order_url?: string | null
     } | null
     nominations?: Array<{
         user_id: number
@@ -45,10 +43,6 @@ export type LunchPanelData = {
     myNomination: { restaurant_id: number } | null
     myVote: { restaurant_id: number } | null
     myVotes: Array<{ restaurant_id: number }>
-    myPicks: number[]
-    pickCount: number
-    isComplete: boolean
-    participation: { completed: number; total: number }
 }
 
 export type LunchRound = {
