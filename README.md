@@ -64,7 +64,7 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
    ADMIN_PASSWORD=replace-before-deploying
    ```
 
-   Use `npm run env:pull` to fetch Vercel env into `.env.vercel`. Next and Prisma do not load that file. Do not run bare `vercel env pull`. That overwrites `.env.local` with the production Neon URL, and the next local boot throws instead of connecting to production.
+   Use `npm run env:pull` to fetch Vercel env into `.vercel/pulled-env`. Do not run bare `vercel env pull`. That overwrites `.env.local` with the production Neon URL, and the next local boot throws instead of connecting to production.
 
 4. **Initialize database** (skip if you already ran `npm run db:local:init`)
 

@@ -9,7 +9,7 @@
         "start": "next start",
         "test": "TZ=America/Vancouver node --experimental-strip-types --test src/entities/booking/lib/room-schedule.test.ts src/entities/booking/model/types.test.ts src/shared/lib/restaurant-title.test.ts src/shared/db/database-target.test.ts",
         "db:local:init": "node scripts/dev-db.mjs",
-        "env:pull": "vercel env pull .env.vercel",
+        "env:pull": "vercel env pull .vercel/pulled-env",
         "lint": "eslint src app",
         "lint:fsd": "CHOKIDAR_USEPOLLING=1 steiger ./src",
         "db:generate": "prisma generate",
