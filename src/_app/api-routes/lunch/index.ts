@@ -232,9 +232,8 @@ export async function POST(request: NextRequest) {
     const action = body.action
 
     if (action === "setGroupOrderLink") {
-        if (!(await requireAdmin(user))) {
-            return jsonResponse(403, { error: "Admin required" })
-        }
+        const denied = requireAdmin(user)
+        if (denied) return denied
 
         const groupOrderUrl = normalizeGroupOrderUrl(body.groupOrderUrl)
         if (!groupOrderUrl) {
@@ -255,9 +254,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "start") {
-        if (!(await requireAdmin(user))) {
-            return jsonResponse(403, { error: "Admin required" })
-        }
+        const denied = requireAdmin(user)
+        if (denied) return denied
 
         const existing = await getActiveRound()
         if (existing) {
@@ -348,9 +346,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "close") {
-        if (!(await requireAdmin(user))) {
-            return jsonResponse(403, { error: "Admin required" })
-        }
+        const denied = requireAdmin(user)
+        if (denied) return denied
 
         const result = await finalizeRound(roundId)
         return jsonResponse(200, { ok: true, ...result })
