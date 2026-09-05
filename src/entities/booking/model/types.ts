@@ -50,5 +50,14 @@ export function timesOverlap(
 }
 
 export function formatTimeValue(value: Date | string) {
+    if (value instanceof Date) {
+        const hours = value.getUTCHours()
+        const minutes = value.getUTCMinutes()
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
+    }
+
+    const match = String(value).match(/(\d{2}):(\d{2})/)
+    if (match) return `${match[1]}:${match[2]}`
+
     return String(value).slice(0, 5)
 }

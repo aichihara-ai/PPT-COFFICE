@@ -7,6 +7,20 @@ import { formatTimeValue, timesOverlap } from "@/entities/booking"
 import { prisma } from "@/shared/db/index.server"
 import { jsonResponse, methodNotAllowed, requireUser } from "@/shared/auth/index.server"
 
+const OFFICE_TIMEZONE = "America/Vancouver"
+
+function officeCalendarParts(now: Date = new Date()) {
+    const date = now.toLocaleDateString("en-CA", { timeZone: OFFICE_TIMEZONE })
+    const time = now.toLocaleTimeString("en-GB", {
+        timeZone: OFFICE_TIMEZONE,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    })
+
+    return { date, time }
+}
+
 const bookingBodySchema = z.object({
     room: z.enum(["room_a", "room_b"]),
     bookingDate: z.string().min(1),
@@ -39,19 +53,21 @@ function formatBookingRow(
     }
 }
 
-function buildRoomStatus(rows: ReturnType<typeof formatBookingRow>[]) {
-    const now = new Date()
-    const today = now.toISOString().slice(0, 10)
-    const currentTime = now.toTimeString().slice(0, 5)
+function buildRoomStatus(
+    rows: ReturnType<typeof formatBookingRow>[],
+    viewedDate: string
+) {
+    const { date: today, time: currentTime } = officeCalendarParts()
+    const isToday = viewedDate === today
 
     return (["room_a", "room_b"] as const).map((room) => {
         const roomBookings = rows.filter((b) => b.room === room)
-        const active = roomBookings.find(
-            (b) =>
-                b.booking_date === today &&
-                b.start_time <= currentTime &&
-                b.end_time > currentTime
-        )
+        const active =
+            isToday &&
+            roomBookings.find(
+                (b) =>
+                    b.start_time <= currentTime && b.end_time > currentTime
+            )
 
         if (active) {
             return {
@@ -63,9 +79,9 @@ function buildRoomStatus(rows: ReturnType<typeof formatBookingRow>[]) {
             }
         }
 
-        const next = roomBookings.find(
-            (b) => b.booking_date === today && b.start_time > currentTime
-        )
+        const next =
+            isToday &&
+            roomBookings.find((b) => b.start_time > currentTime)
 
         return {
             room,
@@ -94,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     return jsonResponse(200, {
         bookings,
-        roomStatus: buildRoomStatus(bookings),
+        roomStatus: buildRoomStatus(bookings, date),
         date,
     })
 }
