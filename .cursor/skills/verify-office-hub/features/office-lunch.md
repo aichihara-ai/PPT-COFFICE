@@ -27,7 +27,7 @@ Preconditions:
 - Do not close a live office round. Skip `lunch-close` unless this database is disposable.
 
 - **Open lunch.** Click `Office lunch`. `h1` is `Office lunch vote`. Description mentions pick up to 3 and one winner.
-- **Empty pool.** Confirm `0 spots in pool` (or `Pool is empty`) only on a disposable database. On the shared Neon, skip this check and add a uniquely titled verify link instead. `Title (optional)` and `Uber Eats link` are visible.
+- **Empty pool.** Confirm `0 spots in pool` (or `Pool is empty`) on this local database, or add a uniquely titled verify link. `Title (optional)` and `Uber Eats link` are visible.
 - **Add titled link.** Fill `Title (optional)` with `Guu Garden` and `Uber Eats link` with `https://www.ubereats.com/ca/store/guu-thurlow/verify-office-hub`. Click `Add to pool`. The pool shows **Guu Garden**, not the raw URL.
 - **Add untitled link.** Leave title empty. Fill `Uber Eats link` with `https://www.ubereats.com/ca/store/japadog-robson/verify-untitled`. Click `Add to pool`. The pool shows the slug fallback (`Japadog Robson`), not the raw URL.
 - **Confirm.** Reload `/lunch`. Both titles remain. Dashboard lunch card shows the same titles.

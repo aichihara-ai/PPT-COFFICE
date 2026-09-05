@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: office-hub-dev-pg
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: office
+      POSTGRES_PASSWORD: office
+      POSTGRES_DB: office_hub
+    volumes:
+      - office-hub-dev-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U office -d office_hub"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  office-hub-dev-pg-data:

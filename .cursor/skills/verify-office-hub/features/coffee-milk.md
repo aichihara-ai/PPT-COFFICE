@@ -30,5 +30,5 @@ Preconditions:
 ## Gotchas
 
 - Team cannot restock; the UI shows waiting copy instead of Restocked. Sign in as HR admin for that button.
-- Inventory is shared Neon state. Flipping milk as well doubles restore work; prefer coffee only.
-- Mutations write Neon and can notify the real team. Restore Coffee after the recipe.
+- Inventory lives in the local Docker database. Flipping milk as well doubles restore work; prefer coffee only.
+- Restore Coffee after the recipe.

@@ -7,9 +7,9 @@ description: Drive the Office Hub Next.js web app the way a Vancouver teammate w
 
 Office Hub is the Vancouver internal office web app in this repo (`office-hub`). The primary user surface is the **browser UI**. There is no first-party CLI. Next.js Route Handlers live under `/api/*` and are a secondary surface for curl checks.
 
-Default verification uses the **Next.js production build** (`npm run build` then `npm start` on port **3000**) against Neon Postgres via `DATABASE_URL`. Protected routes require login. The header shows the signed-in name or role badge and **Sign out** (no Team/HR toggle). Mutations persist in Neon.
+Default verification uses the **Next.js production build** (`npm run build` then `npm start` on port **3000**) against the local Docker Postgres from `docker-compose.dev.yml` (`DATABASE_URL=postgresql://office:office@127.0.0.1:5433/office_hub`). Protected routes require login. The header shows the signed-in name or role badge and **Sign out** (no Team/HR toggle). Mutations persist in that database.
 
-Do not treat the shared Neon backend as an isolated sandbox. Never start a second instance against the same `DATABASE_URL` to parallelize verification.
+Ensure `docker compose -f docker-compose.dev.yml up -d` is running before launch. Do not point verification at the production Neon endpoint. Local processes throw on that host unless `ALLOW_PRODUCTION_DATABASE=1`.
 
 ## Launch
 
@@ -58,7 +58,7 @@ Stable handles (prefer these over coordinates):
 | Inventory | Page title starts with `Coffee & milk`; buttons `☕ Running low`, `🥛 Running low`; HR `☕ Restocked` / `🥛 Restocked`; badges `Stocked` / `Running low` |
 | Lunch | Textboxes `Title (optional)` and `Uber Eats link`; button `Add to pool`; `Start lunch round`; `Vote` / `Voted`; `Close round & announce winner` |
 
-Exercise the UI (or the real `/api/*` the UI uses). Do not stub auth or mutate Neon from the console.
+Exercise the UI (or the real `/api/*` the UI uses). Do not stub auth or mutate the database from the console.
 
 Read `features/README.md` and the matching feature file before driving. Start from `/login` unless the feature says otherwise.
 
@@ -70,7 +70,7 @@ Proof standards:
 
 - Walk the real user path (login, sidebar + labelled buttons). Do not stub React state.
 - Capture **action + result**: snapshot or screenshot before the mutation is not enough; include after-state.
-- Mutations need a second view (reload or another route that reads the same data). A reload of `/rooms` that still shows the booking is persistence proof against Neon.
+- Mutations need a second view (reload or another route that reads the same data). A reload of `/rooms` that still shows the booking is persistence proof against Postgres.
 - Record feature ID and URL in a `proof.txt` next to screenshots.
 - UI proof: accessibility snapshot (`take_snapshot` saved to `*.aria.txt`) plus screenshot (`take_screenshot` saved to `*.png`) with Office Hub chrome visible (sidebar or `h1`).
 - API extra: request method/path, status, and a redacted body. Never paste JWT or `.env.local` values.
