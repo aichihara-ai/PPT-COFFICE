@@ -49,7 +49,8 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
    JWT_SECRET=your-long-random-secret
    SETUP_SECRET=one-time-setup-secret
    ADMIN_NAME=HR Admin
-   ADMIN_PASSWORD=changeme
+   ADMIN_PASSWORD=replace-before-deploying
+   NEXT_PUBLIC_USE_API=true
    ```
 
 3. **Initialize database**
@@ -80,10 +81,11 @@ Fresh databases can run `npm run db:migrate` directly. After migration, `/api/se
 1. Push this repo to **private GitHub**
 2. Import project in Vercel
 3. Add Neon via Vercel Marketplace (sets `DATABASE_URL`)
-4. Set env vars: `JWT_SECRET`, `SETUP_SECRET`, `ADMIN_NAME`, `ADMIN_PASSWORD`
-5. Run `npm run db:migrate` against the production database
-6. Deploy, then hit `/api/setup` once with the setup secret
-7. Log in as HR admin and use the app
+4. Set env vars: `JWT_SECRET`, `SETUP_SECRET`, `ADMIN_NAME`, `ADMIN_PASSWORD`, `NEXT_PUBLIC_USE_API=true`
+5. On an existing Neon database, baseline once: `npx prisma migrate resolve --applied 0_init`
+6. Run `npm run db:migrate` against the production database
+7. Deploy. Hit `/api/setup` only if you need to seed or reset the admin password
+8. Log in as HR admin and use the app
 
 ## Admin (HR)
 

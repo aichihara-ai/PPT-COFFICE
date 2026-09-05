@@ -1,5 +1,3 @@
-const UBER_EATS_HOSTS = new Set(["ubereats.com", "www.ubereats.com"])
-
 export function normalizeUberEatsUrl(value: string) {
     const trimmed = value.trim()
     if (!trimmed) return ""
@@ -11,7 +9,7 @@ export function normalizeUberEatsUrl(value: string) {
             return ""
         }
         const host = url.hostname.replace(/^www\./, "")
-        if (!UBER_EATS_HOSTS.has(host) && host !== "ubereats.com") {
+        if (host !== "ubereats.com") {
             return ""
         }
         url.protocol = "https:"

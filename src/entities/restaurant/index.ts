@@ -1,7 +1,2 @@
-export {
-    isValidUberEatsUrl,
-    normalizeUberEatsUrl,
-    type MenuPreview,
-    type MenuPreviewItem,
-    type Restaurant,
-} from "./model/types"
+export { isValidUberEatsUrl, normalizeUberEatsUrl } from "@/shared/lib/uber-eats-links"
+export type { MenuPreview, MenuPreviewItem, Restaurant } from "./model/types"

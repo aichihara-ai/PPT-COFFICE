@@ -104,17 +104,17 @@ export async function PATCH(request: NextRequest) {
 
     const id = Number(request.nextUrl.searchParams.get("id"))
     const parsed = patchSchema.safeParse(await request.json())
-    if (!id) {
-        return jsonResponse(400, { error: "Restaurant id required" })
+    if (!id || !parsed.success) {
+        return jsonResponse(400, { error: "Valid restaurant id and fields required" })
     }
 
     try {
         const updated = await prisma.restaurant.update({
             where: { id },
             data: {
-                name: parsed.data?.name?.trim(),
-                notes: parsed.data?.notes?.trim(),
-                active: parsed.data?.active,
+                name: parsed.data.name?.trim(),
+                notes: parsed.data.notes?.trim(),
+                active: parsed.data.active,
             },
         })
 

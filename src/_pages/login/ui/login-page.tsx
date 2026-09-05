@@ -30,7 +30,10 @@ export function LoginPage() {
 
     const requestedPath = searchParams.get("from")
     const redirectTo =
-        requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+        requestedPath?.startsWith("/") &&
+        !requestedPath.startsWith("//") &&
+        !requestedPath.includes("://") &&
+        !requestedPath.includes("\\")
             ? requestedPath
             : "/"
 
