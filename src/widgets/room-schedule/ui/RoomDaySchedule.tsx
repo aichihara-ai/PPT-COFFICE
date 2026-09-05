@@ -1,8 +1,11 @@
+import { Fragment } from "react"
+
 import { RoomTimelineTrack } from "@/widgets/room-schedule/ui/RoomTimelineTrack"
 import { RoomTitle } from "@/widgets/room-schedule/ui/RoomTitle"
 import {
     bookingsForRoom,
     formatBookingTime,
+    hourTickPercent,
     nowMarkerStyle,
     SCHEDULE_HOUR_LABELS,
     sortBookings,
@@ -44,6 +47,12 @@ function formatScheduleDate(date: string) {
     })
 }
 
+function formatHourTick(hour: number) {
+    if (hour === 12) return "12p"
+    if (hour > 12) return `${hour - 12}p`
+    return `${hour}a`
+}
+
 function statusForRoom(roomStatus: RoomStatus[] | undefined, roomId: RoomId) {
     return roomStatus?.find((entry) => entry.room === roomId)
 }
@@ -83,92 +92,96 @@ export function RoomDaySchedule({
                 </div>
 
                 <div className="overflow-x-auto">
-                    <div className={cn("min-w-[32rem]", compact ? "space-y-3" : "space-y-4")}>
-                        <div className="grid grid-cols-[5.5rem_1fr] items-end gap-3">
-                            <span className="text-xs text-muted-foreground" />
-                            <div className="relative border-b border-border pb-1">
-                                <div className="grid grid-cols-11 text-xs text-muted-foreground">
-                                    {SCHEDULE_HOUR_LABELS.map((hour) => (
-                                        <span key={hour} className="text-center">
-                                            {hour === 12
-                                                ? "12p"
-                                                : hour > 12
-                                                  ? `${hour - 12}p`
-                                                  : `${hour}a`}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
+                    <div
+                        className={cn(
+                            "grid min-w-[32rem] gap-x-3",
+                            canBook
+                                ? "grid-cols-[5.5rem_minmax(0,1fr)_auto]"
+                                : "grid-cols-[5.5rem_minmax(0,1fr)]",
+                            compact ? "gap-y-3" : "gap-y-4"
+                        )}
+                    >
+                        <span className="text-xs text-muted-foreground" />
+                        <div className="relative h-4 overflow-visible border-b border-border">
+                            {SCHEDULE_HOUR_LABELS.map((hour) => (
+                                <span
+                                    key={hour}
+                                    data-hour-tick={hour}
+                                    className="absolute bottom-0.5 -translate-x-1/2 text-xs text-muted-foreground"
+                                    style={{ left: `${hourTickPercent(hour)}%` }}
+                                >
+                                    {formatHourTick(hour)}
+                                </span>
+                            ))}
                         </div>
+                        {canBook ? <span /> : null}
 
                         {ROOM_IDS.map((roomId) => {
                             const roomBookings = bookingsForRoom(bookings, roomId)
                             const live = statusForRoom(roomStatus, roomId)
 
                             return (
-                                <div key={roomId} className="space-y-2">
-                                    <div className="grid grid-cols-[5.5rem_1fr] items-start gap-3">
-                                        <div className="space-y-1 text-sm font-medium">
-                                            <RoomTitle roomId={roomId} />
-                                            {showLiveStatus && live ? (
-                                                <div className="space-y-1">
-                                                    <Badge
-                                                        variant={
-                                                            live.status === "busy"
-                                                                ? "destructive"
-                                                                : "secondary"
-                                                        }
-                                                        className="text-xs"
-                                                    >
-                                                        {live.status === "busy" ? "Busy" : "Free"}
-                                                    </Badge>
-                                                    {live.status === "busy" ? (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Until {live.until}
-                                                        </p>
-                                                    ) : live.nextStart ? (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Next {live.nextStart}
-                                                        </p>
-                                                    ) : null}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <RoomTimelineTrack
-                                                roomId={roomId}
-                                                bookings={roomBookings}
-                                                compact={compact}
-                                                nowMarkerLeft={nowMarker?.left ?? null}
-                                                rowClassName={ROOM_ROW_CLASS[roomId]}
-                                                onDragBook={
-                                                    canBook
-                                                        ? (startTime, endTime) =>
-                                                              onBookRoom?.(roomId, {
-                                                                  startTime,
-                                                                  endTime,
-                                                              })
-                                                        : undefined
-                                                }
-                                            />
-                                            {canBook ? (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="shrink-0"
-                                                    onClick={() => onBookRoom?.(roomId)}
+                                <Fragment key={roomId}>
+                                    <div className="space-y-1 text-sm font-medium">
+                                        <RoomTitle roomId={roomId} />
+                                        {showLiveStatus && live ? (
+                                            <div className="space-y-1">
+                                                <Badge
+                                                    variant={
+                                                        live.status === "busy"
+                                                            ? "destructive"
+                                                            : "secondary"
+                                                    }
+                                                    className="text-xs"
                                                 >
-                                                    Book
-                                                </Button>
-                                            ) : null}
-                                        </div>
+                                                    {live.status === "busy" ? "Busy" : "Free"}
+                                                </Badge>
+                                                {live.status === "busy" ? (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Until {live.until}
+                                                    </p>
+                                                ) : live.nextStart ? (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Next {live.nextStart}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
                                     </div>
-                                    {showLiveStatus && live?.status === "busy" ? (
-                                        <p className="pl-[5.5rem] text-xs text-muted-foreground">
-                                            {live.title} · {live.bookedBy}
-                                        </p>
+                                    <div className="space-y-2">
+                                        <RoomTimelineTrack
+                                            roomId={roomId}
+                                            bookings={roomBookings}
+                                            compact={compact}
+                                            nowMarkerLeft={nowMarker?.left ?? null}
+                                            rowClassName={ROOM_ROW_CLASS[roomId]}
+                                            onDragBook={
+                                                canBook
+                                                    ? (startTime, endTime) =>
+                                                          onBookRoom?.(roomId, {
+                                                              startTime,
+                                                              endTime,
+                                                          })
+                                                    : undefined
+                                            }
+                                        />
+                                        {showLiveStatus && live?.status === "busy" ? (
+                                            <p className="text-xs text-muted-foreground">
+                                                {live.title} · {live.bookedBy}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                    {canBook ? (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="shrink-0 self-center"
+                                            onClick={() => onBookRoom?.(roomId)}
+                                        >
+                                            Book
+                                        </Button>
                                     ) : null}
-                                </div>
+                                </Fragment>
                             )
                         })}
                     </div>

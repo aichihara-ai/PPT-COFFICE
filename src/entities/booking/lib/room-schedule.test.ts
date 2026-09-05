@@ -1,15 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 
-import {
-    nowMarkerStyle,
-    SCHEDULE_DAY_SPAN_MINUTES,
-    SCHEDULE_DAY_START_MINUTES,
-} from "./room-schedule.ts"
-
-function hourTickPercent(hour: number) {
-    return ((hour * 60 - SCHEDULE_DAY_START_MINUTES) / SCHEDULE_DAY_SPAN_MINUTES) * 100
-}
+import { hourTickPercent, nowMarkerStyle } from "./room-schedule.ts"
 
 describe("nowMarkerStyle axis", () => {
     it("places 9:21 on the same 8a–6p axis as the 9a and 10a ticks", () => {
@@ -39,7 +31,7 @@ describe("nowMarkerStyle axis", () => {
 
         const style = nowMarkerStyle("2026-09-05", fiveTwentyOnePmPt)
         assert.ok(style, "17:21 America/Vancouver is still Sep 5 locally")
-        assert.equal(Number.parseFloat(style.left), 92.1)
+        assert.equal(Number.parseFloat(style.left), 93.5)
         assert.equal(nowMarkerStyle("2026-09-06", fiveTwentyOnePmPt), null)
     })
 })
