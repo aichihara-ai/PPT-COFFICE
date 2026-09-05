@@ -39,7 +39,7 @@ export function KitchenWishlistForm({
                     className={compact ? "h-8 text-sm" : undefined}
                 />
                 <Label htmlFor={inputId}>Product link</Label>
-                <div className={compact ? "flex gap-2" : "flex flex-col gap-2 sm:flex-row"}>
+                <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                         id={inputId}
                         type="url"
@@ -47,13 +47,13 @@ export function KitchenWishlistForm({
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         placeholder="https://..."
-                        className={compact ? "h-8 text-sm" : undefined}
+                        className={compact ? "h-8 min-w-0 w-full text-sm" : "min-w-0 w-full"}
                     />
                     <Button
                         onClick={onSubmit}
                         disabled={!isValid || isPending}
                         size={compact ? "sm" : "default"}
-                        className={compact ? undefined : "sm:w-auto"}
+                        className="w-full shrink-0 sm:w-auto"
                     >
                         Add link
                     </Button>

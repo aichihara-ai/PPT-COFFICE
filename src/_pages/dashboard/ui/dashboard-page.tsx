@@ -187,7 +187,7 @@ export function DashboardPage() {
             </div>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div>
                         <CardTitle>Meeting rooms</CardTitle>
                         <CardDescription>
@@ -196,11 +196,15 @@ export function DashboardPage() {
                                 : `${busyCount} room${busyCount === 1 ? "" : "s"} in use`}
                         </CardDescription>
                     </div>
-                    <div className="flex gap-2">
-                        <Button size="sm" onClick={() => openBookDialog()}>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <Button
+                            size="sm"
+                            className="w-full sm:w-auto"
+                            onClick={() => openBookDialog()}
+                        >
                             Book a room
                         </Button>
-                        <Button variant="ghost" size="sm" asChild>
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto" asChild>
                             <Link href="/rooms">
                                 Full view
                                 <ArrowRight className="size-4" />
@@ -223,7 +227,7 @@ export function DashboardPage() {
 
             <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                    <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <div>
                             <CardTitle>Kitchen snacks</CardTitle>
                             <CardDescription>
@@ -232,7 +236,7 @@ export function DashboardPage() {
                                     : `${openSuggestions.length} open link${openSuggestions.length === 1 ? "" : "s"}`}
                             </CardDescription>
                         </div>
-                        <Button variant="ghost" size="sm" asChild>
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto" asChild>
                             <Link href="/kitchen">
                                 View all
                                 <ArrowRight className="size-4" />
@@ -293,12 +297,12 @@ export function DashboardPage() {
                 </Card>
 
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                    <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <div>
                             <CardTitle>Pantry status</CardTitle>
                             <CardDescription>Coffee and milk — low or stocked</CardDescription>
                         </div>
-                        <Button variant="ghost" size="sm" asChild>
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto" asChild>
                             <Link href="/inventory">
                                 View all
                                 <ArrowRight className="size-4" />
@@ -369,12 +373,12 @@ export function DashboardPage() {
                 </Card>
 
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                    <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <div>
                             <CardTitle>Lunch vote</CardTitle>
                             <CardDescription>Pick up to 3 · one winner</CardDescription>
                         </div>
-                        <Button variant="ghost" size="sm" asChild>
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto" asChild>
                             <Link href="/lunch">
                                 View all
                                 <ArrowRight className="size-4" />
