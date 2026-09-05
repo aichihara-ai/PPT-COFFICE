@@ -39,17 +39,17 @@ export function AddRestaurantLinkForm({
                 className={compact ? "h-8 text-sm" : undefined}
             />
             <Label htmlFor={inputId}>Uber Eats link</Label>
-            <div className={compact ? "flex gap-2" : "flex flex-col gap-2 sm:flex-row"}>
+            <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                     id={inputId}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder="https://www.ubereats.com/ca/store/..."
-                    className={compact ? "h-8 min-w-0 text-sm" : "min-w-0"}
+                    className={compact ? "h-8 min-w-0 w-full text-sm" : "min-w-0 w-full"}
                 />
                 <Button
                     size="sm"
-                    className="shrink-0"
+                    className="w-full shrink-0 sm:w-auto"
                     onClick={onSubmit}
                     disabled={!isValid || isPending}
                 >

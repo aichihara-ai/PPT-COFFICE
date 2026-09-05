@@ -69,28 +69,35 @@ export function RoomsPage() {
             description="See who is in each room and when they are free."
             actions={
                 <>
-                    <div className="space-y-2">
+                    <div className="w-full space-y-2 sm:w-auto">
                         <Label htmlFor="booking-date">Date</Label>
                         <Input
                             id="booking-date"
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
+                            className="w-full"
                         />
                     </div>
-                    <Button onClick={() => openBookDialog()}>Book a room</Button>
+                    <Button className="w-full sm:w-auto" onClick={() => openBookDialog()}>
+                        Book a room
+                    </Button>
                 </>
             }
         >
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                <CardHeader className="flex flex-col items-stretch gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div>
                         <CardTitle>Meeting rooms</CardTitle>
                         <CardDescription>
                             Drag on the timeline to book, or use the Book button
                         </CardDescription>
                     </div>
-                    <Button size="sm" onClick={() => openBookDialog()}>
+                    <Button
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        onClick={() => openBookDialog()}
+                    >
                         Book a room
                     </Button>
                 </CardHeader>
