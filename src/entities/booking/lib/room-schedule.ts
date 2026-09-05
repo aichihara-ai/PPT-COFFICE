@@ -48,11 +48,10 @@ export function bookingBlockStyle(booking: RoomBooking) {
     }
 }
 
-export function nowMarkerStyle(date: string) {
-    const today = new Date().toISOString().slice(0, 10)
+export function nowMarkerStyle(date: string, now: Date = new Date()) {
+    const today = now.toISOString().slice(0, 10)
     if (date !== today) return null
 
-    const now = new Date()
     const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
     if (
